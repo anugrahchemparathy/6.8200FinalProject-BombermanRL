@@ -10,7 +10,7 @@ class GameGUI:
     def __init__(self, game_states):
         self.game_states = game_states
         self.current_state_index = 0
-        self.refresh_time = 100 # in milliseconds
+        self.refresh_time = 1000 # in milliseconds
 
         # Create the root window
         self.root = tk.Tk()
@@ -61,46 +61,11 @@ class GameGUI:
             self.root.after(self.refresh_time, self.update)
 
 
-
-# game_states = [
-# ''.join([    
-#     '😈😈😈😈😈😈😈😈😈😈\n',    
-#     '😈😈😈😈😈😈😈😈😈😈\n',    
-#     '😈😈😈😈😈😈😈😈😈😈\n',    
-#     '😈😈😈😈😈😈😈😈😈😈\n',    
-#     '😈😈😈😈😈😈😈😈😈😈\n',   
-#     '😈😈😈😈😈😈😈😈😈😈\n',    
-#     '😈😈😈😈😈😈😈😈😈😈\n',    
-#     '😈😈😈😈😈😈😈😈😈😈\n',    
-#     '😈😈😈😈😈😈😈😈😈😈\n',    
-#     '😈😈😈😈😈😈😈😈😈😈\n',]),
-# ''.join([
-#     '😀😀😀😀😀😀😀😀😀😀\n',
-#     '😀😀😀😀😀😀😀😀😀😀\n',
-#     '😀😀😀😀😀😀😀😀😀😀\n',
-#     '😀😀😀😀😀😀😀😀😀😀\n',
-#     '😀😀😀😀😀😀😀😀😀😀\n',
-#     '😀😀😀😀😀😀😀😀😀😀\n',
-#     '😀😀😀😀😀😀😀😀😀😀\n',
-#     '😀😀😀😀😀😀😀😀😀😀\n',
-#     '😀😀😀😀😀😀😀😀😀😀\n',
-#     '😀😀😀😀😀😀😀😀😀😀\n',
-# ])
-# ]
-
 with open('states.txt', 'r') as f:
     content = f.read()
 
 # Split the content of the file into a list of game state strings
-game_state_strings = content.split('\n\n')
-
-# Convert each game state string into a 2D list of emojis
-game_states = []
-print(game_state_strings)
-for state_str in game_state_strings:
-    state_list = [[char for char in row] for row in state_str.split('\n') if row != '']
-    game_states.append(state_list)
-
+game_states= content.split('\n\n')
 
 gui = GameGUI(game_states)
 
