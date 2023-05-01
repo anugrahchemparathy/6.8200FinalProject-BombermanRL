@@ -2,6 +2,7 @@ import gym
 import sys
 from gym import spaces
 from gym.utils import seeding
+from gym.envs.registration import registry, register
 import numpy as np
 import settings
 from contextlib import closing
@@ -15,14 +16,12 @@ LEFT = 2
 RIGHT = 3
 BOMB = 4
 WAIT = 5
-BOMB = 4
-WAIT = 5
 # states
-COIN = 2
 WALL = -1
 EXPLOSION = -3
 FREE = 0
 CRATE = 1
+COIN = 2
 PLAYER = 3
 RENDER_CORNERS = False
 RENDER_HISTORY = True
@@ -32,7 +31,7 @@ class Agent(object):
         self.x = pos[0]
         self.y = pos[1]
         self.id = id
-        self.bombs_left = 1
+        self.bombs_left = 3
         self.alive = True
         self.events = []
         self.score = 0
@@ -428,6 +427,17 @@ class BombermanEnv(gym.Env):
         if mode != 'human':
             with closing(outfile):
                 return outfile.getvalue()
+
+module_name = __name__
+
+env_name = 'Bomberman-v1'
+if env_name in registry.env_specs:
+    del registry.env_specs[env_name]
+register(
+    id=env_name,
+    entry_point=f'{module_name}:BombermanGym',
+)
+
 if __name__ == "__main__":
     history = []
     benv = BombermanEnv(s)
