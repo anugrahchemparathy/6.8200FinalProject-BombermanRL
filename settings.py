@@ -54,7 +54,7 @@ settings = {
     'log_agent_code': logging.DEBUG,
 }
 settings['grid_offset'] = [(settings['height'] - settings['rows']*settings['grid_size'])//2] * 2
-s = namedtuple("Settings", settings.keys())(*settings.values())
+game_settings = namedtuple("Settings", settings.keys())(*settings.values())
 
 
 events = [
@@ -80,4 +80,4 @@ events = [
     'OPPONENT_ELIMINATED',
     'SURVIVED_ROUND',
 ]
-e = namedtuple('Events', events)(*range(len(events)))
+event_ids = namedtuple('Events', events)(*range(len(events)))
