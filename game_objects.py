@@ -1,3 +1,5 @@
+from settings import game_settings
+
 class Agent(object):
     def __init__(self, id, pos):
         self.x = pos[0]
@@ -12,7 +14,7 @@ class Agent(object):
         self.score = self.score+points
 
     def make_bomb(self):
-        return Bomb((self.x, self.y), self, s.bomb_timer+1, s.bomb_power)
+        return Bomb((self.x, self.y), self, game_settings.bomb_timer+1, game_settings.bomb_power)
 
 
 class Item(object):
@@ -65,7 +67,7 @@ class Coin(Item):
 
 
 class Explosion(object):
-    def __init__(self, blast_coords, owner, explosion_timer=s.explosion_timer):
+    def __init__(self, blast_coords, owner, explosion_timer=game_settings.explosion_timer):
         self.blast_coords = blast_coords
         self.owner = owner
         self.timer = explosion_timer
