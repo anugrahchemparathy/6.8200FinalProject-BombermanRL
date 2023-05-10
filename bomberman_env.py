@@ -8,8 +8,13 @@ import sys
 import numpy as np
 from contextlib import closing
 from io import StringIO
+
+
 from settings import game_settings, event_ids
 from game_objects import *
+
+
+
 UP = 0
 DOWN = 1
 LEFT = 2
