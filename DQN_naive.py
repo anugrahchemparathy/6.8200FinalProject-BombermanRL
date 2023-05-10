@@ -5,6 +5,7 @@ import numpy as np
 import random
 import gym
 from copy import deepcopy
+import bomberman_env
 
 from torchvision.models import resnet18
 from torch.autograd import Variable
@@ -17,7 +18,7 @@ EPISILO = 0.9
 MEMORY_CAPACITY = 20000
 Q_NETWORK_ITERATION = 100
 
-env = gym.make("CartPole-v0") ### REPLACE WITH YOUR ENVIRONMENT
+env = gym.make("Bomberman-v1") ### REPLACE WITH YOUR ENVIRONMENT
 env = env.unwrapped
 NUM_ACTIONS = env.action_space.n
 NUM_STATES = env.observation_space.shape[0]
@@ -142,7 +143,7 @@ def main():
         state = env.reset()
         ep_reward = 0
         while True:
-            env.render()
+            # env.render()
             action = dqn.choose_action(state)
             next_state, reward, done, _ = env.step(action)
 

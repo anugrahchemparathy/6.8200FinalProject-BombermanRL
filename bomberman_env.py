@@ -8,17 +8,8 @@ import sys
 import numpy as np
 from contextlib import closing
 from io import StringIO
-
-
-import settings
+from settings import game_settings, event_ids
 from game_objects import *
-
-
-# from settings import s, e
-s = settings.s
-e = settings.e
-
-# ACTIONS
 UP = 0
 DOWN = 1
 LEFT = 2
@@ -36,7 +27,7 @@ RENDER_CORNERS = False
 RENDER_HISTORY = True
 
 class BombermanEnv(gym.Env):
-    def __init__(self, bombermanrlSettings=s):
+    def __init__(self, bombermanrlSettings=game_settings):
         self.screen_height = bombermanrlSettings.rows
         self.screen_width = bombermanrlSettings.cols
         # six different actions see above
@@ -65,25 +56,25 @@ class BombermanEnv(gym.Env):
         assert self.action_space.contains(action)
         if action == UP and self.tile_is_free(self.player.x, self.player.y - 1):
             self.player.y -= 1
-            self.player.events.append(e.MOVED_UP)
+            self.player.events.append(event_ids.MOVED_UP)
         elif action == DOWN and self.tile_is_free(self.player.x, self.player.y + 1):
             self.player.y += 1
-            self.player.events.append(e.MOVED_DOWN)
+            self.player.events.append(event_ids.MOVED_DOWN)
         elif action == LEFT and self.tile_is_free(self.player.x - 1, self.player.y):
             self.player.x -= 1
-            self.player.events.append(e.MOVED_LEFT)
+            self.player.events.append(event_ids.MOVED_LEFT)
         elif action == RIGHT and self.tile_is_free(self.player.x + 1, self.player.y):
             self.player.x += 1
-            self.player.events.append(e.MOVED_RIGHT)
+            self.player.events.append(event_ids.MOVED_RIGHT)
         elif action == BOMB and self.player.bombs_left > 0:
             self.logger.info(
                 f'player <{self.player.id}> drops bomb at {(self.player.x, self.player.y)}')
             self.bombs.append(self.player.make_bomb())
             self.player.bombs_left -= 1
-            self.player.events.append(e.BOMB_DROPPED)
+            self.player.events.append(event_ids.BOMB_DROPPED)
             reward = 10
         elif action == WAIT:
-            self.player.events.append(e.WAITED)
+            self.player.events.append(event_ids.WAITED)
         else:
             reward = -10
         # collect coins
@@ -96,8 +87,8 @@ class BombermanEnv(gym.Env):
                     coin.collected = True
                     self.logger.info(
                         f'Agent <{a.id}> picked up coin at {(a.x, a.y)} and receives 1 point')
-                    a.update_score(s.reward_coin)
-                    a.events.append(e.COIN_COLLECTED)
+                    a.update_score(game_settings.reward_coin)
+                    a.events.append(event_ids.COIN_COLLECTED)
                     reward = 10
                     # a.trophies.append(Agent.coin_trophy)
         # simulate bombs and explosion
@@ -118,7 +109,7 @@ class BombermanEnv(gym.Env):
                             if (c.x, c.y) == (x, y):
                                 c.collectable = True
                                 self.logger.info(f'Coin found at {(x,y)}')
-                                bomb.owner.events.append(e.COIN_FOUND)
+                                bomb.owner.events.append(event_ids.COIN_FOUND)
                 # Create explosion
                 self.explosions.append(Explosion(blast_coords, bomb.owner))
                 # reward= reward+1
@@ -146,15 +137,15 @@ class BombermanEnv(gym.Env):
                         if a is explosion.owner:
                             self.logger.info(
                                 f'Agent <{a.id}> blown up by own bomb')
-                            a.events.append(e.KILLED_SELF)
+                            a.events.append(event_ids.KILLED_SELF)
                             # explosion.owner.trophies.append(Agent.suicide_trophy)
                         else:
                             self.logger.info(
                                 f'Agent <{a.id}> blown up by agent <{explosion.owner.id}>\'s bomb')
                             self.logger.info(
                                 f'Agent <{explosion.owner.name}> receives 1 point')
-                            explosion.owner.update_score(s.reward_kill)
-                            explosion.owner.events.append(e.KILLED_OPPONENT)
+                            explosion.owner.update_score(game_settings.reward_kill)
+                            explosion.owner.events.append(event_ids.KILLED_OPPONENT)
             # Show smoke for a little longer
             if explosion.timer <= 0:
                 explosion.active = False
@@ -200,10 +191,10 @@ class BombermanEnv(gym.Env):
     #    1 : Crate
     #    3,4,5,6: player
 
-    def _get_obs(self):
+    def _get_obs2(self):
         return self._render_4_perspective()
 
-    def _get_obs2(self):
+    def _get_obs(self):
         rendered_map = np.copy(self.arena)
         # add coins
         for coin in self.coins:
@@ -232,7 +223,7 @@ class BombermanEnv(gym.Env):
                     result[k, i] = WALL
                 else:
                     # TODO; Wand bedingung updaten
-                    if x+it_x*(i+1) < 0 or 0 > y+it_y*(i+1) or x+it_x*(i+1) > s.cols or s.rows < y+it_y*(i+1):
+                    if x+it_x*(i+1) < 0 or 0 > y+it_y*(i+1) or x+it_x*(i+1) > game_settings.cols or game_settings.rows < y+it_y*(i+1):
                         wand = True
                         result[k, i] = WALL
                     elif self.arena[x+it_x*(i+1), y+it_y*(i+1)] == WALL:
@@ -255,7 +246,7 @@ class BombermanEnv(gym.Env):
             i =0 #adding corners
             for it_x, it_y in [(-1, -1), (1, 1), (-1, 1), (1, -1)]:
                 # TODO; Wand bedingung updaten
-                if x+it_x < 0 or 0 > y+it_y or x+it_x > s.cols or s.rows < y+it_y:
+                if x+it_x < 0 or 0 > y+it_y or x+it_x > game_settings.cols or game_settings.rows < y+it_y:
                     wand = True
                     result[k, i] = WALL
                 elif self.arena[x+it_x,y+it_y] == WALL:
@@ -283,19 +274,19 @@ class BombermanEnv(gym.Env):
         return result#.reshape(4*distance)
     def generate_arena(self):
         # Arena with wall and crate layout
-        self.arena = (np.random.rand(s.cols, s.rows) < s.crate_density).astype(np.int8)
+        self.arena = (np.random.rand(game_settings.cols, game_settings.rows) < game_settings.crate_density).astype(np.int8)
         self.arena[:1, :] = -1
         self.arena[-1:,:] = -1
         self.arena[:, :1] = -1
         self.arena[:,-1:] = -1
         self.coins = []
-        for x in range(s.cols):
-            for y in range(s.rows):
+        for x in range(game_settings.cols):
+            for y in range(game_settings.rows):
                 if (x+1)*(y+1) % 2 == 1:
                     self.arena[x,y] = -1
                     self.coins.append(Coin((x,y)))# Adding coins every where
         # Starting positions
-        self.start_positions = [(1,1), (1,s.rows-2), (s.cols-2,1), (s.cols-2,s.rows-2)]
+        self.start_positions = [(1,1), (1,game_settings.rows-2), (game_settings.cols-2,1), (game_settings.cols-2,game_settings.rows-2)]
         np.random.shuffle(self.start_positions)
         for (x,y) in self.start_positions:
             for (xx,yy) in [(x,y), (x-1,y), (x+1,y), (x,y-1), (x,y+1)]:
@@ -332,7 +323,7 @@ class BombermanEnv(gym.Env):
     #    0 : Free
     #    1 : Crate
     #    3,4,5,6: player
-        map = self._get_obs2()
+        map = self._get_obs()
         st = ""
         outfile.write("\n")
         for zeile in map:
@@ -341,7 +332,7 @@ class BombermanEnv(gym.Env):
                 st += "{}".format(["💥","💣","❌","👣","❎","🏆","😎"][element+3])
             outfile.write("\n")
             st += "\n"
-        view = self._get_obs()
+        view = self._get_obs2()
         history.append(st)
         if not RENDER_HISTORY:
             for zeile in view:
@@ -364,7 +355,7 @@ register(
 
 if __name__ == "__main__":
     history = []
-    benv = BombermanEnv(s)
+    benv = BombermanEnv(game_settings)
     benv.step(RIGHT)
     benv.step(BOMB)
     benv.render(history)
