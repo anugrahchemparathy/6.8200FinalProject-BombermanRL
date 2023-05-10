@@ -431,11 +431,11 @@ class BombermanEnv(gym.Env):
 module_name = __name__
 
 env_name = 'Bomberman-v1'
-if env_name in registry.env_specs:
-    del registry.env_specs[env_name]
+if env_name in registry:
+    del registry[env_name]
 register(
     id=env_name,
-    entry_point=f'{module_name}:BombermanGym',
+    entry_point=f'{module_name}:BombermanEnv',
 )
 
 if __name__ == "__main__":

@@ -4,6 +4,7 @@ import torch.nn.functional as F
 import numpy as np
 import random
 import gym
+from copy import deepcopy
 
 from torchvision.models import resnet18
 from torch.autograd import Variable

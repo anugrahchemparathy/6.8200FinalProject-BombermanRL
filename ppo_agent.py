@@ -18,6 +18,7 @@ from easyrl.utils.common import set_random_seed
 from easyrl.utils.gym_util import make_vec_env
 
 import bomberman_env
+from DQN_naive import ResNet
 
 def set_configs(exp_name='bc'):
     set_config('ppo')
@@ -44,31 +45,23 @@ def main():
     env.reset()
     ob_size = env.observation_space.shape[0]
 
-    actor_body = MLP(input_size=ob_size,
-                     hidden_sizes=[64],
-                     output_size=64,
-                     hidden_act=nn.ReLU,
-                     output_act=nn.ReLU)
+    # actor_body = MLP(input_size=ob_size,
+    #                  hidden_sizes=[64],
+    #                  output_size=64,
+    #                  hidden_act=nn.ReLU,
+    #                  output_act=nn.ReLU)
+    actor_body = ResNet()
+    critic_body = ResNet()
 
-    critic_body = MLP(input_size=ob_size,
-                      hidden_sizes=[64],
-                      output_size=64,
-                      hidden_act=nn.ReLU,
-                      output_act=nn.ReLU)
-    if isinstance(env.action_space, gym.spaces.Discrete):
-        act_size = env.action_space.n
-        actor = CategoricalPolicy(actor_body,
-                                  in_features=64,
-                                  action_dim=act_size)
-    elif isinstance(env.action_space, gym.spaces.Box):
-        act_size = env.action_space.shape[0]
-        actor = DiagGaussianPolicy(actor_body,
-                                   in_features=64,
-                                   action_dim=act_size,
-                                   tanh_on_dist=cfg.alg.tanh_on_dist,
-                                   std_cond_in=cfg.alg.std_cond_in)
-    else:
-        raise TypeError(f'Unknown action space type: {env.action_space}')
+    # critic_body = MLP(input_size=ob_size,
+    #                   hidden_sizes=[64],
+    #                   output_size=64,
+    #                   hidden_act=nn.ReLU,
+    #                   output_act=nn.ReLU)
+    act_size = env.action_space.n
+    actor = CategoricalPolicy(actor_body,
+                                in_features=64,
+                                action_dim=act_size)
 
     critic = ValueNet(critic_body, in_features=64)
     agent = PPOAgent(actor=actor, critic=critic, env=env)
