@@ -9,18 +9,26 @@ import numpy as np
 from contextlib import closing
 from io import StringIO
 
+"""
+game_settings = named tuple which contains variety of settings like game size and rewards
+event_ids = named tuple which contains all possible events
 
+You can access with
+print(game_settings.rows)
+print(event_ids.MOVED_UP)
+"""
 from settings import game_settings, event_ids
 from game_objects import *
 
 
-
+# ACTIONS
 UP = 0
 DOWN = 1
 LEFT = 2
 RIGHT = 3
 BOMB = 4
 WAIT = 5
+
 # STATES
 WALL = -1
 EXPLOSION = -3
@@ -35,12 +43,15 @@ class BombermanEnv(gym.Env):
     def __init__(self, bombermanrlSettings=game_settings):
         self.screen_height = bombermanrlSettings.rows
         self.screen_width = bombermanrlSettings.cols
-        # six different actions see above
+        
+        # see action space above
         self.action_space = spaces.Discrete(6)
         self.observation_space = spaces.Box(
-            low=-3, high=3, shape=(4+ RENDER_CORNERS+ RENDER_HISTORY, 4), dtype=np.int8)
+            low=-3, high=3, shape=(4+ RENDER_CORNERS+ RENDER_HISTORY, 4), dtype=np.int8
+            )
         self.seed()
         self.logger = Log()
+
         # Start the first game
         self.reset()
         self.env = self
@@ -186,16 +197,17 @@ class BombermanEnv(gym.Env):
     def all_players_dead(self):
         return not self.player.alive
         # return length([a for a in self.players if a])
-    # Function that returns the viewed image or so called observation
-    # map values:
-    #    2: Coin
-    #    -1: WALL
-    #    -2: Bomb
-    #    -3: Explosion
-    #    0 : Free
-    #    1 : Crate
-    #    3,4,5,6: player
 
+    """
+    Function that returns the viewed image or so called observation map values:
+       2: Coin
+       -1: WALL
+       -2: Bomb
+       -3: Explosion
+       0 : Free
+       1 : Crate
+       3,4,5,6: player
+    """
     def _get_obs2(self):
         return self._render_4_perspective()
 
@@ -277,6 +289,7 @@ class BombermanEnv(gym.Env):
                 else:
                     result[k,i]=self.player.events[len(self.player.events)-i-1]
         return result#.reshape(4*distance)
+    
     def generate_arena(self):
         # Arena with wall and crate layout
         self.arena = (np.random.rand(game_settings.cols, game_settings.rows) < game_settings.crate_density).astype(np.int8)
@@ -319,15 +332,16 @@ class BombermanEnv(gym.Env):
         self.bombs = []
         self.explosions =[]
         return self._get_obs()
+    
     def render(self,history,mode='human'):
         outfile = StringIO() if mode == 'ansi' else sys.stdout
-    # 2: Coin
-    #    -1: WALL
-    #    -2: Bomb
-    #    -3: Explosion
-    #    0 : Free
-    #    1 : Crate
-    #    3,4,5,6: player
+        # 2: Coin
+        #    -1: WALL
+        #    -2: Bomb
+        #    -3: Explosion
+        #    0 : Free
+        #    1 : Crate
+        #    3,4,5,6: player
         map = self._get_obs()
         st = ""
         outfile.write("\n")
