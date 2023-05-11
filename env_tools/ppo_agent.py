@@ -20,7 +20,7 @@ from easyrl.utils.gym_util import make_vec_env
 import new_env as bomberman_env
 from models import ActorModel
 
-def set_configs(exp_name='bc'):
+def set_configs(exp_name='ppo_base'):
     set_config('ppo')
     cfg.alg.num_envs = 1
     cfg.alg.episode_steps = 150
@@ -58,7 +58,6 @@ def main():
     runner = EpisodicRunner(agent=agent, env=env)
     engine = PPOEngine(agent=agent,
                        runner=runner)
-    print(cfg.alg.save_dir)
     if not cfg.alg.test:
         engine.train()
     else:
