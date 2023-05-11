@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 def read_tf_log(log_dir):
     log_dir = Path(log_dir)
     log_files = list(log_dir.glob(f'**/events.*'))
+    print(log_files)
     if len(log_files) < 1:
         return None
     log_file = log_files[0]
@@ -20,7 +21,10 @@ def read_tf_log(log_dir):
     return steps, returns
 
 if __name__ == '__main__':
-    save_dir = "env_tools/data/bc"
+    save_dir = "data/ppo_base"
     steps, returns = read_tf_log(save_dir)
     plt.plot(steps, returns)
+    plt.title('Average return for PPO agent')
+    plt.xlabel('# steps')
+    plt.ylabel('return')
     plt.show()

@@ -260,9 +260,6 @@ class BombermanEnv(gym.Env):
         
         self.bombs = []
         self.explosions = []
-        
-        print()
-        self.render()
 
         return self._get_obs()
     
@@ -330,7 +327,7 @@ class BombermanEnv(gym.Env):
     ==========================================================
     """
 
-    def render(self):
+    def render(self, history):
         rendered_map = np.copy(self.arena)
         
         # add coins
