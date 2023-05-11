@@ -1,5 +1,15 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
+from torch.distributions.categorical import Categorical
+
+def init_params(m):
+    classname = m.__class__.__name__
+    if classname.find("Linear") != -1:
+        m.weight.data.normal_(0, 1)
+        m.weight.data *= 1 / torch.sqrt(m.weight.data.pow(2).sum(1, keepdim=True))
+        if m.bias is not None:
+            m.bias.data.fill_(0)
 
 class Resnet18(nn.Module):
     def __init__(self, output_size, device=None):
@@ -13,6 +23,39 @@ class Resnet18(nn.Module):
     
     def forward(self, x):
         return self.resnet(x)
+
+class ActorModel(nn.Module):
+    
+    def __init__(self, num_actions, device=None):
+        super().__init__()
+        if device is None:
+            device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.image_conv_actor = nn.Sequential(
+            nn.Conv2d(3, 16, (2, 2)),
+            nn.ReLU(),
+            nn.MaxPool2d((2, 2)),
+            nn.Conv2d(16, 32, (2, 2)),
+            nn.ReLU(),
+            nn.Conv2d(32, 64, (2, 2)),
+            nn.ReLU()
+        )
+        self.actor = nn.Sequential(
+            nn.Linear(64, 64),
+            nn.Tanh(),
+            nn.Linear(64, num_actions)
+        )
+        self.apply(init_params)
+
+    def forward(self, obs):
+        conv_in = obs.transpose(1, 3).transpose(2, 3) # reshape into expected order
+
+        x = self.image_conv_actor(conv_in)
+        embedding = x.reshape(x.shape[0], -1)
+
+        x = self.actor(embedding)
+        return Categorical(logits=F.log_softmax(x, dim=1))
+
+
 
 if __name__ == "__main__":
     # Define the input tensor

@@ -18,7 +18,7 @@ from easyrl.utils.common import set_random_seed
 from easyrl.utils.gym_util import make_vec_env
 
 import env_tools.bomberman_env as bomberman_env
-from RL_methods.DQN_naive import ResNet
+from env_tools.models import ResNet
 
 def set_configs(exp_name='bc'):
     set_config('ppo')
