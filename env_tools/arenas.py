@@ -45,5 +45,5 @@ training_arenas = [arena1]
 
 
 def get_arena():
-  return training_arenas[0]
+  return np.copy(training_arenas[0])
     

@@ -269,12 +269,14 @@ class BombermanEnv(gym.Env):
     """
     
     # resets env, returns initial state
-    def reset(self):
+    def reset(self, artificial_start_position=None):
         self.round = 0
         agent_start_position = self.generate_arena()
-        self.player = Agent(1, agent_start_position)
-
-        # self.arena[agent_start_position[0], agent_start_position[1]] = 3
+        print('agent_start_position: ', agent_start_position)
+        if artificial_start_position:
+            self.player = Agent(1, artificial_start_position)
+        else:
+            self.player = Agent(1, agent_start_position)
         
         self.bombs = []
         self.explosions = []
