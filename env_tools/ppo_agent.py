@@ -58,6 +58,7 @@ def main():
     runner = EpisodicRunner(agent=agent, env=env)
     engine = PPOEngine(agent=agent,
                        runner=runner)
+    print(cfg.alg.save_dir)
     if not cfg.alg.test:
         engine.train()
     else:
