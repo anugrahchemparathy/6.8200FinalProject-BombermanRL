@@ -88,6 +88,18 @@ class BombermanEnv(gym.Env):
     # gets arena randomly selected from arenas.py
     def generate_arena(self):
         self.arena = get_arena()
+        self.coins = []
+        for x in range(game_settings.cols):
+            for y in range(game_settings.rows):
+                if (x+1)*(y+1) % 2 == 1:
+                    self.arena[x,y] = -1
+                    self.coins.append(Coin((x,y)))# Adding coins every where
+        self.start_positions = [(1,1), (1,game_settings.rows-2), (game_settings.cols-2,1), (game_settings.cols-2,game_settings.rows-2)]
+        np.random.shuffle(self.start_positions)
+        for (x,y) in self.start_positions:
+            for (xx,yy) in [(x,y), (x-1,y), (x+1,y), (x,y-1), (x,y+1)]:
+                if self.arena[xx,yy] == 1:
+                    self.arena[xx,yy] = 0
 
         
         

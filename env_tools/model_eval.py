@@ -21,7 +21,7 @@ def create_actor(env):
 
 def load_agent(env, device, expert_model_path='pusher_expert_model.pt'):
     expert_actor = create_actor(env=env)
-    expert_agent = BasicAgent(actor=expert_actor) ##REPLACE WITH YOUR AGENT
+    expert_agent = PPOAgent(actor=actor, critic=critic, env=env)
     print(f'Loading expert model from: {expert_model_path}.')
     ckpt_data = torch.load(expert_model_path, map_location=torch.device(f'{device}'))
     load_state_dict(expert_agent.actor,
