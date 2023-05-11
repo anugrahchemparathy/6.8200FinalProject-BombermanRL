@@ -163,7 +163,7 @@ class BombermanEnv(gym.Env):
         else:
             reward += rewards.invalid_action
         
-        reward += self.player.get_curiosity_reward() * 2
+        reward += self.player.get_curiosity_reward()
 
         # collect coins
         for coin in self.coins:
@@ -293,6 +293,7 @@ class BombermanEnv(gym.Env):
         print('did action', enum_2_action[action], 'got reward', reward, 'done', done, 'round', self.round)
         if self.all_players_dead():
             print('AGENT DIED')
+        if done:
             self.render()
 
         return (self._get_obs(), reward, done, {})
@@ -352,6 +353,7 @@ class BombermanEnv(gym.Env):
             out_string += ''.join([ITEM_2_EMOJI[r] for r in row]) + '\n'
         
         print(out_string)
+        return out_string
 
 
 module_name = __name__

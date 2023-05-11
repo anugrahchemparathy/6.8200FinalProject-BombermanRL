@@ -16,9 +16,9 @@ class Agent(object):
 
         self.past_positions = [initial_pos]
 
-    def get_curiosity_reward(self):
+    def get_curiosity_reward(self, gamma = 0.75):
         pos = (self.x, self.y)
-        distances = [dist(pos, p) for p in self.past_positions]
+        distances = [dist(pos, self.past_positions[~i]) * (gamma ** i) for i in range(len(self.past_positions))]
         self.past_positions.append(pos)
         return sum(distances)
 

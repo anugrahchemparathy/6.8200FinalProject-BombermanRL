@@ -10,7 +10,7 @@ class GameGUI:
     def __init__(self, game_states):
         self.game_states = game_states
         self.current_state_index = 0
-        self.refresh_time = 1000 # in milliseconds
+        self.refresh_time = 100 # in milliseconds
 
         # Create the root window
         self.root = tk.Tk()
@@ -61,7 +61,7 @@ class GameGUI:
             self.root.after(self.refresh_time, self.update)
 
 
-with open('states.txt', 'r') as f:
+with open('replay.txt', 'r') as f:
     content = f.read()
 
 # Split the content of the file into a list of game state strings
