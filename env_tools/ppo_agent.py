@@ -17,7 +17,7 @@ from easyrl.runner.nstep_runner import EpisodicRunner
 from easyrl.utils.common import set_random_seed
 from easyrl.utils.gym_util import make_vec_env
 
-import bomberman_env as bomberman_env
+import new_env as bomberman_env
 from models import ActorModel
 
 def set_configs(exp_name='bc'):
