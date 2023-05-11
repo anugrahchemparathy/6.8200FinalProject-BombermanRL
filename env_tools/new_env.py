@@ -82,7 +82,7 @@ class BombermanEnv(gym.Env):
     given the current player and action, update the player's location
     and returns reward based on coins collected
     """
-    def update_player_loc(action):
+    def update_player_loc(self, action):
         reward = 0
         
         if action == UP and self.tile_is_free(self.player.x, self.player.y - 1):
@@ -135,7 +135,7 @@ class BombermanEnv(gym.Env):
     """
     explodes bomb and modifies state of all crates in blasted area. creates a new explosion.
     """
-    def explode_bomb(bomb):
+    def explode_bomb(self, bomb):
         self.logger.info(f'Agent <{bomb.owner.id}>`s bomb at {(bomb.x, bomb.y)} explodes')
         blast_coords = bomb.get_blast_coords(self.arena)
         # Clear crates
