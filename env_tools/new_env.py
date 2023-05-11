@@ -58,7 +58,7 @@ class BombermanEnv(gym.Env):
 
         # NEED TO CHANGE THIS
         self.observation_space = spaces.Box(
-            low=-3, high=3, shape=(4+ RENDER_CORNERS+ RENDER_HISTORY, 4), dtype=np.int8
+            low=-3, high=3, shape=(17, 17), dtype=np.int8
             )
         self.seed()
         self.logger = Log()
