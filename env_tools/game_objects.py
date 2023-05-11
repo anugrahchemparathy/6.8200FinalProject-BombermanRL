@@ -39,8 +39,7 @@ class Agent(object):
         # weight nearby bombs more, add e = 0.1 to denominator to avoid division by 0
         # bomb_distances = [1/(dist(pos, bomb.get_pos()) + 0.1) for bomb in bombs]
         bomb_distances = np.array([dist(pos, bomb.get_pos()) for bomb in bombs])
-        func = lambda x: x-1 if x <= 1 else np.sqrt(x-1)
-        bomb_distances = np.vectorize(func)(bomb_distances)
+        bomb_distances = np.where(bomb_distances > 1, np.sqrt(bomb_distances-1), bomb_distances-1)
         return np.sum(bomb_distances) * AVOID_BOMB_WEIGHT
 
     def update_score(self, points):
