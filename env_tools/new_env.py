@@ -110,8 +110,9 @@ class BombermanEnv(gym.Env):
 
     # gets arena randomly selected from arenas.py
     def generate_arena(self):
-        self.arena, agent_start_position = get_arena()
+        self.arena = get_arena()
         self.coins = []
+        agent_start_position = random.choice(np.argwhere(self.arena == 0))
 
         agent_x, agent_y = agent_start_position
         
