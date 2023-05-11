@@ -60,7 +60,7 @@ class Bomb(Item):
 class Coin(Item):
     def __init__(self, pos):
         super(Coin, self).__init__(pos)
-        self.collectable = False
+        self.collectable = True
         self.collected = False
 
     def get_state(self):

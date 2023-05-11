@@ -44,7 +44,7 @@ settings = {
     'max_agents': 4,
     'max_steps': 400,
     'stop_if_not_training': False,
-    'bomb_power': 3,
+    'bomb_power': 9,
     'bomb_timer': 4,
     'explosion_timer': 2,
 
