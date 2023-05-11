@@ -352,6 +352,15 @@ class BombermanEnv(gym.Env):
                     result[k,i]=self.player.events[len(self.player.events)-i-1]
         return result#.reshape(4*distance)
 
+module_name = __name__
+env_name = 'Bomberman-v1'
+if env_name in registry:
+    del registry[env_name]
+register(
+    id=env_name,
+    entry_point=f'{module_name}:BombermanEnv',
+)
+
 if __name__ == "__main__":
     history = []
     benv = BombermanEnv(game_settings)
