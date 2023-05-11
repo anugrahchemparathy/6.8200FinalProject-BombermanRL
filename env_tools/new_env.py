@@ -277,9 +277,6 @@ class BombermanEnv(gym.Env):
         
         self.bombs = []
         self.explosions = []
-        
-        print()
-        self.render()
 
         return self._get_obs()
     
