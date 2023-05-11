@@ -45,20 +45,10 @@ def main():
     env.reset()
     ob_size = env.observation_space.shape[0]
 
-    # actor_body = MLP(input_size=ob_size,
-    #                  hidden_sizes=[64],
-    #                  output_size=64,
-    #                  hidden_act=nn.ReLU,
-    #                  output_act=nn.ReLU)
     act_size = env.action_space.n
     actor_body = ActorModel(act_size)
     critic_body = ActorModel(act_size)
 
-    # critic_body = MLP(input_size=ob_size,
-    #                   hidden_sizes=[64],
-    #                   output_size=64,
-    #                   hidden_act=nn.ReLU,
-    #                   output_act=nn.ReLU)
     actor = CategoricalPolicy(actor_body,
                                 in_features=64,
                                 action_dim=act_size)
