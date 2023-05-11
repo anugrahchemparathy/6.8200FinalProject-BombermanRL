@@ -39,9 +39,9 @@ arena2 = np.array([
     [ -1,   0,   0,   0,   1,   1,   0,   0,   0,   1,   1,   0,   1,   1,   0,   0,  -1],
     [ -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1]])
 
+arena3 = np.load("arenas/arena_sparse.npy")
 
-
-training_arenas = [arena1]
+training_arenas = [arena2]
 
 
 def get_arena():
