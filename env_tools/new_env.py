@@ -19,6 +19,8 @@ from settings import game_settings, event_ids, rewards
 from game_objects import *
 from arenas import *
 
+CURIOSITY_BASELINE = 1.5
+
 # ACTIONS
 UP = 0
 DOWN = 1
@@ -129,26 +131,39 @@ class BombermanEnv(gym.Env):
     def update_player_loc(self, action):
         reward = 0
         # print('action: ', action, self.tile_is_free(self.player.x, self.player.y + 1))
-        
+        scaled_bomb_distances = self.player.get_bomb_avoidance_reward(self.bombs)
+
         if action == LEFT and self.tile_is_free(self.player.x, self.player.y - 1):
             self.player.y -= 1
             self.player.events.append(event_ids.MOVED_LEFT)
             reward += rewards.valid_move
+
+            bomb_avoidance = self.player.get_bomb_avoidance_reward(self.bombs) - scaled_bomb_distances
+            reward +=  bomb_avoidance
         
         elif action == RIGHT and self.tile_is_free(self.player.x, self.player.y + 1):
             self.player.y += 1
             self.player.events.append(event_ids.MOVED_RIGHT)
             reward += rewards.valid_move
+
+            bomb_avoidance = self.player.get_bomb_avoidance_reward(self.bombs) - scaled_bomb_distances
+            reward +=  bomb_avoidance
         
         elif action == UP and self.tile_is_free(self.player.x - 1, self.player.y):
             self.player.x -= 1
             self.player.events.append(event_ids.MOVED_UP)
             reward += rewards.valid_move
+
+            bomb_avoidance = self.player.get_bomb_avoidance_reward(self.bombs) - scaled_bomb_distances
+            reward +=  bomb_avoidance
         
         elif action == DOWN and self.tile_is_free(self.player.x + 1, self.player.y):
             self.player.x += 1
             self.player.events.append(event_ids.MOVED_DOWN)
             reward += rewards.valid_move
+
+            bomb_avoidance = self.player.get_bomb_avoidance_reward(self.bombs) - scaled_bomb_distances
+            reward +=  bomb_avoidance
         
         elif action == BOMB and self.player.bombs_left > 0:
             self.logger.info(f'player <{self.player.id}> drops bomb at {(self.player.x, self.player.y)}')
@@ -163,7 +178,9 @@ class BombermanEnv(gym.Env):
         else:
             reward += rewards.invalid_action
         
-        reward += self.player.get_curiosity_reward()
+        curiosity_reward = self.player.get_curiosity_reward()
+        # print('curiosity reward: ', curiosity_reward)
+        reward += curiosity_reward - CURIOSITY_BASELINE
 
         # collect coins
         for coin in self.coins:

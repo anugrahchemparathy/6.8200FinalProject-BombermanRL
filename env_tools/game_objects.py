@@ -4,6 +4,10 @@ from settings import game_settings
 def dist(pos1, pos2):
     return abs(pos1[0]-pos2[0])+abs(pos1[1]-pos2[1])
 
+AVOID_BOMB_WEIGHT = 5
+CURIOSITY_REWARD = 0.75
+# maybe we should add true curiosity reward, like if the agent has never been in a certain state before
+
 class Agent(object):
     def __init__(self, id, initial_pos):
         self.x = initial_pos[0]
@@ -16,11 +20,24 @@ class Agent(object):
 
         self.past_positions = [initial_pos]
 
-    def get_curiosity_reward(self, gamma = 0.75):
+    def get_pos(self):
+        return (self.x, self.y)
+
+    def get_curiosity_reward(self, gamma = CURIOSITY_REWARD):
         pos = (self.x, self.y)
         distances = [dist(pos, self.past_positions[~i]) * (gamma ** i) for i in range(len(self.past_positions))]
         self.past_positions.append(pos)
         return sum(distances)
+    
+    def get_bomb_avoidance_reward(self, bombs): # this can be tuned to prioritize soon to explode bombs more
+        pos = (self.x, self.y)
+
+        if not bombs:
+            return 0
+
+        # weight nearby bombs more, add e = 0.1 to denominator to avoid division by 0
+        bomb_distances = [1/(dist(pos, bomb.get_pos()) + 0.1) for bomb in bombs]
+        return sum(bomb_distances) * AVOID_BOMB_WEIGHT
 
     def update_score(self, points):
         self.score = self.score+points
@@ -43,6 +60,10 @@ class Bomb(Item):
         self.timer = timer
         self.power = power
         self.active = True
+
+    def get_pos(self):
+        return (self.x, self.y)
+    
 
     def get_state(self):
         # return ((self.x, self.y), self.timer, self.power, self.active, self.owner.name)
