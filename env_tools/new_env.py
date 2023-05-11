@@ -87,20 +87,19 @@ class BombermanEnv(gym.Env):
 
     # gets arena randomly selected from arenas.py
     def generate_arena(self):
-        self.arena = get_arena()
+        self.arena, agent_start_position = get_arena()
         self.coins = []
+
+        agent_x, agent_y = agent_start_position
+        
+        
         for x in range(game_settings.cols):
             for y in range(game_settings.rows):
-                if (x+1)*(y+1) % 2 == 1:
-                    self.arena[x,y] = -1
-                    self.coins.append(Coin((x,y)))# Adding coins every where
-        self.start_positions = [(1,1), (1,game_settings.rows-2), (game_settings.cols-2,1), (game_settings.cols-2,game_settings.rows-2)]
-        np.random.shuffle(self.start_positions)
-        for (x,y) in self.start_positions:
-            for (xx,yy) in [(x,y), (x-1,y), (x+1,y), (x,y-1), (x,y+1)]:
-                if self.arena[xx,yy] == 1:
-                    self.arena[xx,yy] = 0
+                if self.arena[x,y] == 0 and (x != agent_x and y != agent_y):
+                    self.arena[x,y] = 2
+                    self.coins.append(Coin((x,y))) # Adding coins everywhere
 
+        return agent_start_position
         
         
     """
@@ -231,11 +230,13 @@ class BombermanEnv(gym.Env):
     # resets env, returns initial state
     def reset(self):
         self.round = 0
-        self.generate_arena()
-        self.player = Agent(1, [1, 1])
+        agent_start_position = self.generate_arena()
+        self.player = Agent(1, agent_start_position)
+
+        self.arena[agent_start_position[0], agent_start_position[1]] = 3
+        
         self.bombs = []
         self.explosions = []
-        self.coins = []
         return self._get_obs()
     
     # returns next_state, reward, done, log
@@ -398,19 +399,20 @@ register(
 if __name__ == "__main__":
     history = []
     benv = BombermanEnv(game_settings)
-    benv.step(RIGHT)
-    benv.step(BOMB)
     benv.render(history)
     benv.step(LEFT)
+    benv.step(BOMB)
     benv.render(history)
-    benv.step(WAIT)
-    benv.render(history)
-    benv.step(WAIT)
-    benv.render(history)
-    benv.step(WAIT)
-    benv.render(history)
-    benv.step(WAIT)
-    benv.render(history)
+    # benv.step(LEFT)
+    # benv.render(history)
+    # benv.step(WAIT)
+    # benv.render(history)
+    # benv.step(WAIT)
+    # benv.render(history)
+    # benv.step(WAIT)
+    # benv.render(history)
+    # benv.step(WAIT)
+    # benv.render(history)
     with open('states.txt', 'w') as f:
         for state in history:
             f.write("%s\n" % state)
