@@ -17,7 +17,7 @@ from easyrl.runner.nstep_runner import EpisodicRunner
 from easyrl.utils.common import set_random_seed
 from easyrl.utils.gym_util import make_vec_env
 
-import bomberman_env
+import env_tools.bomberman_env as bomberman_env
 from RL_methods.DQN_naive import ResNet
 
 def set_configs(exp_name='bc'):

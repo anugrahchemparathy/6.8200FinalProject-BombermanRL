@@ -5,7 +5,7 @@ import numpy as np
 import random
 import gym
 from copy import deepcopy
-import bomberman_env
+import env_tools.bomberman_env as bomberman_env
 
 from torchvision.models import resnet18
 from torch.autograd import Variable
