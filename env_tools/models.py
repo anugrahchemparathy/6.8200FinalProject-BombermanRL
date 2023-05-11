@@ -41,8 +41,7 @@ class ActorModel(nn.Module):
         )
         self.actor = nn.Sequential(
             nn.Linear(576, 64),
-            nn.Tanh(),
-            nn.Linear(64, num_actions)
+
         )
         self.apply(init_params)
 
@@ -53,7 +52,8 @@ class ActorModel(nn.Module):
         embedding = x.reshape(x.shape[0], -1)
 
         x = self.actor(embedding)
-        return Categorical(logits=F.log_softmax(x, dim=1))
+
+        return x
 
 
 
