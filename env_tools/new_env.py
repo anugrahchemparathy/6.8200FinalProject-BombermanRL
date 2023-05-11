@@ -327,7 +327,7 @@ class BombermanEnv(gym.Env):
     ==========================================================
     """
 
-    def render(self, history):
+    def render(self):
         rendered_map = np.copy(self.arena)
         
         # add coins
