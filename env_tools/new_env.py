@@ -237,6 +237,34 @@ class BombermanEnv(gym.Env):
 
         return (self._get_obs(), reward, done, {})
 
+    def render(self,history,mode='human'):
+        outfile = StringIO() if mode == 'ansi' else sys.stdout
+        # 2: Coin
+        #    -1: WALL
+        #    -2: Bomb
+        #    -3: Explosion
+        #    0 : Free
+        #    1 : Crate
+        #    3,4,5,6: player
+        map = self._get_obs()
+        st = ""
+        outfile.write("\n")
+        for zeile in map:
+            for element in zeile:
+                outfile.write("{}".format(["💥","💣","❌","👣","❎","🏆","😎"][element+3]))
+                st += "{}".format(["💥","💣","❌","👣","❎","🏆","😎"][element+3])
+            outfile.write("\n")
+            st += "\n"
+        view = self._get_obs2()
+        history.append(st)
+        if not RENDER_HISTORY:
+            for zeile in view:
+                for element in zeile:
+                    outfile.write("{}".format(["💥","💣","❌","👣","❎","🏆","😎"][element+3]))
+                outfile.write("\n")
+        if mode != 'human':
+            with closing(outfile):
+                return outfile.getvalue()
 
     # get current state
     def _get_obs(self):
@@ -258,6 +286,71 @@ class BombermanEnv(gym.Env):
         rendered_map[self.player.x, self.player.y] = PLAYER
 
         return rendered_map
+
+    def _get_obs2(self):
+        return self._render_4_perspective()
+
+    def _render_4_perspective(self, distance=4):
+        result = np.zeros((4+RENDER_CORNERS+ RENDER_HISTORY, distance),dtype=np.int8)
+        x = self.player.x
+        y = self.player.y
+        k = 0
+        for it_x, it_y in [(-1, 0), (1, 0), (0, 1), (0, -1)]:
+            wand = False
+            for i in range(distance):  # should we be able to look over walls? --> currently not
+                if(wand):
+                    result[k, i] = WALL
+                else:
+                    # TODO; Wand bedingung updaten
+                    if x+it_x*(i+1) < 0 or 0 > y+it_y*(i+1) or x+it_x*(i+1) > game_settings.cols or game_settings.rows < y+it_y*(i+1):
+                        wand = True
+                        result[k, i] = WALL
+                    elif self.arena[x+it_x*(i+1), y+it_y*(i+1)] == WALL:
+                        wand = True
+                        result[k, i] = WALL
+                    else:
+                        result[k,i] = self.arena[x+it_x*(i+1), y+it_y*(i+1)] # forgotten first important!
+                        for b in self.bombs:
+                            if b.x == x+it_x*(i+1) and b.y == y+it_y*(i+1):
+                                result[k, i] = -2
+                        for c in self.coins:
+                            if c.x == x+it_x*(i+1) and c.y == y+it_y*(i+1) and c.collectable:
+                                result[k, i] = COIN  # TODO Players, Explosions
+                        for e in self.explosions:
+                            if (x+it_x*(i+1), y+it_y*(i+1)) in e.blast_coords:
+                                result[k,i] = EXPLOSION
+            k = k+1
+        k= distance
+        if RENDER_CORNERS:
+            i =0 #adding corners
+            for it_x, it_y in [(-1, -1), (1, 1), (-1, 1), (1, -1)]:
+                # TODO; Wand bedingung updaten
+                if x+it_x < 0 or 0 > y+it_y or x+it_x > game_settings.cols or game_settings.rows < y+it_y:
+                    wand = True
+                    result[k, i] = WALL
+                elif self.arena[x+it_x,y+it_y] == WALL:
+                    wand= True
+                    result[k,i]= WALL
+                else:
+                    result[k,i] = self.arena[x+it_x, y+it_y] # forgotten first important!
+                    for b in self.bombs:
+                        if b.x == x+it_x and b.y == y+it_y:
+                            result[k,i] = -2
+                    for c in self.coins:
+                        if c.x == x+it_x and c.y == y+it_y and c.collectable:
+                            result[k,i] = COIN
+                    for e in self.explosions:
+                            if (x+it_x, y+it_y) in e.blast_coords:
+                                result[k,i] = EXPLOSION
+                i = i+1
+            k = k+1 # inc by one 
+        if RENDER_HISTORY:
+            for i in range(distance):
+                if len(self.player.events)<=i:
+                    result[k,i]=-1
+                else:
+                    result[k,i]=self.player.events[len(self.player.events)-i-1]
+        return result#.reshape(4*distance)
 
 if __name__ == "__main__":
     history = []
