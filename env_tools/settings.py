@@ -6,17 +6,18 @@ import logging
 
 reward_table = {
     # Display
-    'place_bomb': 10,
+    'place_bomb': 1.5,
     'valid_move': 1,
-    'wait': 0,
-    'invalid_action': -10,
-    'collect_coin': 10,
+    'wait': -5,
+    'invalid_action': -20,
+    'collect_coin': 25,
+    'invert_previous_action_penalty': -10,
     
-    'game_timeout': -50,
-    'destroy_crate': 10,
+    'game_timeout': -50000,
+    'destroy_crate': 100,
     'killed_opponent': 10,
-    'agent_died': -10,
-    'survive_round': 10,
+    'agent_died': -1000,
+    'survive_round': 1000,
 }
 rewards = namedtuple("Rewards", reward_table.keys())(*reward_table.values())
 
@@ -39,12 +40,12 @@ settings = {
     'cols': 17,
     'rows': 17,
     'grid_size': 30,
-    'crate_density': 0.1,
+    'crate_density': 0,
     'actions': ['UP', 'DOWN', 'LEFT', 'RIGHT', 'BOMB', 'WAIT'],
     'max_agents': 4,
     'max_steps': 400,
     'stop_if_not_training': False,
-    'bomb_power': 9,
+    'bomb_power': 1,
     'bomb_timer': 4,
     'explosion_timer': 2,
 

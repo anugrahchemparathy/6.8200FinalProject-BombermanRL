@@ -93,7 +93,7 @@ class BombermanEnv(gym.Env):
 
         # NEED TO CHANGE THIS
         self.observation_space = spaces.Box(
-            low=-3, high=3, shape=(17, 17), dtype=np.int8
+            low=-3, high=3, shape=(2, 17, 17), dtype=np.int8
             )
         self.seed()
         self.logger = Log()
@@ -116,7 +116,7 @@ class BombermanEnv(gym.Env):
         
         for x in range(game_settings.cols):
             for y in range(game_settings.rows):
-                if self.arena[x,y] == 0 and (x != agent_x and y != agent_y):
+                if self.arena[x,y] == 0 and (x != agent_x or y != agent_y):
                     self.coins.append(Coin((x,y))) # Adding coins everywhere
 
         return agent_start_position
@@ -163,6 +163,7 @@ class BombermanEnv(gym.Env):
         else:
             reward += rewards.invalid_action
         
+        reward += self.player.get_curiosity_reward() * 2
 
         # collect coins
         for coin in self.coins:
@@ -259,6 +260,10 @@ class BombermanEnv(gym.Env):
         
         self.bombs = []
         self.explosions = []
+        
+        print()
+        self.render()
+
         return self._get_obs()
     
     # returns next_state, reward, done, log
@@ -286,27 +291,34 @@ class BombermanEnv(gym.Env):
             reward += rewards.agent_died
         
         print('did action', enum_2_action[action], 'got reward', reward, 'done', done, 'round', self.round)
+        if self.all_players_dead():
+            print('AGENT DIED')
+            self.render()
 
         return (self._get_obs(), reward, done, {})
 
     # get current state
     def _get_obs(self):
-        rendered_map = np.copy(self.arena)
+        agent_view = np.copy(self.arena)
+        bomb_plane = np.copy(self.arena)
         
         # add coins
         for coin in self.coins:
             if coin.collectable:
-                rendered_map[coin.x, coin.y] = COIN
+                agent_view[coin.x, coin.y] = COIN
         
         # add bombs
         for bomb in self.bombs:
-            rendered_map[bomb.x, bomb.y] = BOMB
+            bomb_plane[bomb.x, bomb.y] = BOMB
         for explosion in self.explosions:
             for e in explosion.blast_coords:
-                rendered_map[e[0], e[1]] = EXPLOSION
+                bomb_plane[e[0], e[1]] = EXPLOSION
         
         # TODO add players
-        rendered_map[self.player.x, self.player.y] = PLAYER
+        agent_view[self.player.x, self.player.y] = PLAYER
+
+        # stack rendered map and bomb plane along dimension 0
+        rendered_map = np.stack((agent_view, bomb_plane), axis=0)
 
         return rendered_map
 
@@ -317,7 +329,7 @@ class BombermanEnv(gym.Env):
     ==========================================================
     """
 
-    def render(self,history,mode='human'):
+    def render(self):
         rendered_map = np.copy(self.arena)
         
         # add coins
@@ -352,25 +364,26 @@ register(
 )
 
 if __name__ == "__main__":
-    history = []
+
     benv = BombermanEnv(game_settings)
-    benv.render(history)
+    benv.render()
     benv.step(DOWN)
     benv.step(DOWN)
     benv.step(RIGHT)
     benv.step(RIGHT)
     benv.step(BOMB)
-    benv.render(history)
+    benv.render()
     benv.step(LEFT)
-    benv.render(history)
-    # benv.step(WAIT)
-    # benv.render(history)
-    # benv.step(WAIT)
-    # benv.render(history)
-    # benv.step(WAIT)
-    # benv.render(history)
-    # benv.step(WAIT)
-    # benv.render(history)
-    with open('states.txt', 'w') as f:
-        for state in history:
-            f.write("%s\n" % state)
+    benv.render()
+    benv.step(WAIT)
+    benv.render()
+    print("all players dead?", benv.all_players_dead())
+    benv.step(WAIT)
+    benv.render()
+    print("all players dead?", benv.all_players_dead())
+    benv.step(WAIT)
+    benv.render()
+    print("all players dead?", benv.all_players_dead())
+    benv.step(WAIT)
+    benv.render()
+    print("all players dead?", benv.all_players_dead())

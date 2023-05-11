@@ -1,14 +1,26 @@
 from settings import game_settings
 
+# manhattan distance between two positions
+def dist(pos1, pos2):
+    return abs(pos1[0]-pos2[0])+abs(pos1[1]-pos2[1])
+
 class Agent(object):
-    def __init__(self, id, pos):
-        self.x = pos[0]
-        self.y = pos[1]
+    def __init__(self, id, initial_pos):
+        self.x = initial_pos[0]
+        self.y = initial_pos[1]
         self.id = id
         self.bombs_left = 3
         self.alive = True
         self.events = []
         self.score = 0
+
+        self.past_positions = [initial_pos]
+
+    def get_curiosity_reward(self):
+        pos = (self.x, self.y)
+        distances = [dist(pos, p) for p in self.past_positions]
+        self.past_positions.append(pos)
+        return sum(distances)
 
     def update_score(self, points):
         self.score = self.score+points

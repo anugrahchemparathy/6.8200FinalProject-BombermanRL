@@ -31,7 +31,7 @@ class ActorModel(nn.Module):
         if device is None:
             device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.image_conv_actor = nn.Sequential(
-            nn.Conv2d(1, 4, (2, 2)),
+            nn.Conv2d(2, 4, (2, 2)),
             nn.ReLU(),
             nn.MaxPool2d((2, 2)),
             nn.Conv2d(4, 8, (2, 2)),
@@ -46,9 +46,9 @@ class ActorModel(nn.Module):
         self.apply(init_params)
 
     def forward(self, obs):
-        conv_in = obs.unsqueeze(1)
+        # conv_in = obs.unsqueeze(1)
 
-        x = self.image_conv_actor(conv_in)
+        x = self.image_conv_actor(obs)
         embedding = x.reshape(x.shape[0], -1)
 
         x = self.actor(embedding)
