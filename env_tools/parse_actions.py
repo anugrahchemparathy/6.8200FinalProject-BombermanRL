@@ -7,4 +7,4 @@ def parse_actions(file_name):
 
 if __name__ == '__main__':
     file_name = 'file.txt'
-    print(parse_actions(file_name))
+    print(str(parse_actions(file_name)).replace("'", ''))
