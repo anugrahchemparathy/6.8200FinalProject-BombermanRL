@@ -11,3 +11,9 @@ if __name__ == "__main__":
     print(outputs.shape)
     # By default outputs 1000 dimensional vector
     # can change to size of our action space?
+    model.fc = torch.nn.Linear(512, 6)
+    
+    
+    outputs = model(inputs)
+    print(outputs)
+    print(outputs.shape)
