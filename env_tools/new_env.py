@@ -57,9 +57,9 @@ class BombermanEnv(gym.Env):
         self.action_space = spaces.Discrete(6)
 
         # NEED TO CHANGE THIS
-        # self.observation_space = spaces.Box(
-        #     low=-3, high=3, shape=(4+ RENDER_CORNERS+ RENDER_HISTORY, 4), dtype=np.int8
-        #     )
+        self.observation_space = spaces.Box(
+            low=-3, high=3, shape=(4+ RENDER_CORNERS+ RENDER_HISTORY, 4), dtype=np.int8
+            )
         self.seed()
         self.logger = Log()
 
