@@ -46,7 +46,7 @@ class ActorModel(nn.Module):
         self.apply(init_params)
 
     def forward(self, obs):
-        conv_in = obs.unsqueeze(0)
+        conv_in = obs.unsqueeze(1)
 
         x = self.image_conv_actor(conv_in)
         embedding = x.reshape(x.shape[0], -1)
