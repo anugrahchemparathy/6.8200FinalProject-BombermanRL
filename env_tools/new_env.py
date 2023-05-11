@@ -46,7 +46,21 @@ env._get_obs() - get current state
 
 class BombermanEnv(gym.Env):
     """
-    FIELDS
+    fields:
+    self.screen_height - height of the game screen
+    self.screen_width - width of the game screen
+    self.action_space - action space of the game (gym spaces)
+    self.observation_space - observation space of the game (gym spaces)
+    self.seed() - seed the game
+    self.logger - logger for the game from
+
+
+    methods:
+    self.reset() - resets the game, returns initial state
+    self.step(action) - returns next_state, reward, done, log
+    self._get_obs() - get current state
+    self.render() - render the game screen using helper functions
+
     
     """
     def __init__(self, bombermanrlSettings=game_settings):
@@ -77,7 +91,6 @@ class BombermanEnv(gym.Env):
 
         
         
-
     """
     given the current player and action, update the player's location
     and returns reward based on coins collected
@@ -182,6 +195,21 @@ class BombermanEnv(gym.Env):
     def all_players_dead(self):
         return not self.player.alive
 
+    
+    def tile_is_free(self, x, y):
+        is_free = (self.arena[x, y] == 0)
+        if is_free:
+            for obstacle in self.bombs + [self.player]:  # TODO Players...
+                is_free = is_free and (obstacle.x != x or obstacle.y != y)
+        return is_free
+    
+    def check_if_all_coins_collected(self):
+        return len([c for c in self.coins if c.collected]) == len(self.coins)
+
+    def all_players_dead(self):
+        return not self.player.alive
+    
+
     """
     ==========================================================
     CORE ENV FUNCTIONS
@@ -197,19 +225,6 @@ class BombermanEnv(gym.Env):
         self.explosions = []
         self.coins = []
         return self._get_obs()
-    
-    def tile_is_free(self, x, y):
-        is_free = (self.arena[x, y] == 0)
-        if is_free:
-            for obstacle in self.bombs + [self.player]:  # TODO Players...
-                is_free = is_free and (obstacle.x != x or obstacle.y != y)
-        return is_free
-    
-    def check_if_all_coins_collected(self):
-        return len([c for c in self.coins if c.collected]) == len(self.coins)
-
-    def all_players_dead(self):
-        return not self.player.alive
     
     # returns next_state, reward, done, log
     def step(self, action):
@@ -236,6 +251,34 @@ class BombermanEnv(gym.Env):
             reward += rewards.agent_died
 
         return (self._get_obs(), reward, done, {})
+
+    # get current state
+    def _get_obs(self):
+        rendered_map = np.copy(self.arena)
+        
+        # add coins
+        for coin in self.coins:
+            if coin.collectable:
+                rendered_map[coin.x, coin.y] = COIN
+        
+        # add bombs
+        for bomb in self.bombs:
+            rendered_map[bomb.x, bomb.y] = BOMB
+        for explosion in self.explosions:
+            for e in explosion.blast_coords:
+                rendered_map[e[0], e[1]] = EXPLOSION
+        
+        # TODO add players
+        rendered_map[self.player.x, self.player.y] = PLAYER
+
+        return rendered_map
+
+
+    """
+    ==========================================================
+    RENDER FUNCTIONS
+    ==========================================================
+    """
 
     def render(self,history,mode='human'):
         outfile = StringIO() if mode == 'ansi' else sys.stdout
@@ -265,27 +308,6 @@ class BombermanEnv(gym.Env):
         if mode != 'human':
             with closing(outfile):
                 return outfile.getvalue()
-
-    # get current state
-    def _get_obs(self):
-        rendered_map = np.copy(self.arena)
-        
-        # add coins
-        for coin in self.coins:
-            if coin.collectable:
-                rendered_map[coin.x, coin.y] = COIN
-        
-        # add bombs
-        for bomb in self.bombs:
-            rendered_map[bomb.x, bomb.y] = BOMB
-        for explosion in self.explosions:
-            for e in explosion.blast_coords:
-                rendered_map[e[0], e[1]] = EXPLOSION
-        
-        # TODO add players
-        rendered_map[self.player.x, self.player.y] = PLAYER
-
-        return rendered_map
 
     def _get_obs2(self):
         return self._render_4_perspective()
