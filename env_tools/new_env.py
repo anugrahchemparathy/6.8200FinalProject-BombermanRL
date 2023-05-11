@@ -244,3 +244,23 @@ class BombermanEnv(gym.Env):
         rendered_map[self.player.x, self.player.y] = PLAYER
 
         return rendered_map
+
+if __name__ == "__main__":
+    history = []
+    benv = BombermanEnv(game_settings)
+    benv.step(RIGHT)
+    benv.step(BOMB)
+    benv.render(history)
+    benv.step(LEFT)
+    benv.render(history)
+    benv.step(WAIT)
+    benv.render(history)
+    benv.step(WAIT)
+    benv.render(history)
+    benv.step(WAIT)
+    benv.render(history)
+    benv.step(WAIT)
+    benv.render(history)
+    with open('states.txt', 'w') as f:
+        for state in history:
+            f.write("%s\n" % state)
