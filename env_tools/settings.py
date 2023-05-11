@@ -8,7 +8,7 @@ reward_table = {
     # Display
     'place_bomb': 1.5,
     'valid_move': 1,
-    'wait': -5,
+    'wait': -20,
     'invalid_action': -20,
     'collect_coin': 25,
     'invert_previous_action_penalty': -10,

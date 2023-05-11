@@ -1,4 +1,5 @@
 from settings import game_settings
+import numpy as np
 
 # manhattan distance between two positions
 def dist(pos1, pos2):
@@ -36,8 +37,10 @@ class Agent(object):
             return 0
 
         # weight nearby bombs more, add e = 0.1 to denominator to avoid division by 0
-        bomb_distances = [1/(dist(pos, bomb.get_pos()) + 0.1) for bomb in bombs]
-        return sum(bomb_distances) * AVOID_BOMB_WEIGHT
+        # bomb_distances = [1/(dist(pos, bomb.get_pos()) + 0.1) for bomb in bombs]
+        bomb_distances = np.array([dist(pos, bomb.get_pos()) for bomb in bombs])
+        bomb_distances = np.clip(np.log(bomb_distances - 1) + 1, a_min = -1)
+        return np.sum(bomb_distances) * AVOID_BOMB_WEIGHT
 
     def update_score(self, points):
         self.score = self.score+points

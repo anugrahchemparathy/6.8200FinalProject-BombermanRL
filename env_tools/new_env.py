@@ -277,9 +277,11 @@ class BombermanEnv(gym.Env):
             self.player = Agent(1, artificial_start_position)
         else:
             self.player = Agent(1, agent_start_position)
-        
+
         self.bombs = []
         self.explosions = []
+
+        self.update_player_loc(BOMB)
 
         return self._get_obs()
     
