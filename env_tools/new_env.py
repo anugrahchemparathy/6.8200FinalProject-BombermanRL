@@ -195,7 +195,21 @@ class BombermanEnv(gym.Env):
         self.player = Agent(1, [1, 1])
         self.bombs = []
         self.explosions = []
+        self.coins = []
         return self._get_obs()
+    
+    def tile_is_free(self, x, y):
+        is_free = (self.arena[x, y] == 0)
+        if is_free:
+            for obstacle in self.bombs + [self.player]:  # TODO Players...
+                is_free = is_free and (obstacle.x != x or obstacle.y != y)
+        return is_free
+    
+    def check_if_all_coins_collected(self):
+        return len([c for c in self.coins if c.collected]) == len(self.coins)
+
+    def all_players_dead(self):
+        return not self.player.alive
     
     # returns next_state, reward, done, log
     def step(self, action):
