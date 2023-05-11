@@ -14,6 +14,7 @@ class Agent(object):
         self.score = self.score+points
 
     def make_bomb(self):
+        self.player.bombs_left -= 1
         return Bomb((self.x, self.y), self, game_settings.bomb_timer+1, game_settings.bomb_power)
 
 

@@ -4,6 +4,22 @@ import pygame
 from pygame.locals import *
 import logging
 
+reward_table = {
+    # Display
+    'place_bomb': 10,
+    'valid_move': 1,
+    'wait': 0,
+    'invalid_action': -10,
+    'collect_coin': 10,
+    
+    'game_timeout': -50,
+    'destroy_crate': 10,
+    'killed_opponent': 10,
+    'agent_died': -10,
+    'survive_round': 10,
+}
+rewards = namedtuple("Rewards", reward_table.keys())(*reward_table.values())
+
 
 settings = {
     # Display
