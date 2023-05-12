@@ -3,6 +3,7 @@ from pathlib import Path
 import gym
 import torch
 import torch.nn as nn
+import pickle
 
 from easyrl.agents.ppo_agent import PPOAgent
 from easyrl.configs import cfg
@@ -68,7 +69,9 @@ def main():
         import pprint
         pprint.pprint(stat_info)
     env.close()
-
+    name = "ppo_base"
+    pickle.dump(agent, f"saved_runs/agents/{name}.pkl")
+    pickle.dump(engine, f"saved_runs/engines/{name}.pkl")
 
 if __name__ == '__main__':
     main()

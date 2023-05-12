@@ -61,7 +61,7 @@ class GameGUI:
             self.root.after(self.refresh_time, self.update)
 
 
-with open('replay.txt', 'r') as f:
+with open('replays/maze_replay_long.txt', 'r') as f:
     content = f.read()
 
 # Split the content of the file into a list of game state strings

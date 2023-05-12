@@ -273,7 +273,7 @@ class BombermanEnv(gym.Env):
         self.round = 0
         agent_start_position = self.generate_arena()
         print('agent_start_position: ', agent_start_position)
-        if artificial_start_position:
+        if artificial_start_position is not None:
             self.player = Agent(1, artificial_start_position)
         else:
             self.player = Agent(1, agent_start_position)
