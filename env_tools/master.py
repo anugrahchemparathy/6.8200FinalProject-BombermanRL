@@ -173,6 +173,8 @@ def bfs_through_crate(ob):
         ind+=1
         
     actions = []
+    if path_to_coin is None:
+        return []
     
     for act in path_to_coin:
         playerX += dirs[act][0]
@@ -237,13 +239,14 @@ def count_coins(ob):
     
     return count
 
+
 if __name__ == "__main__":
     ob = env.reset()
     replay = ""
     replay += env.render() + "\n"
     agent = ExpertAgent()
     while True:
-        action = agent.get_action(ob)
+        action, _ = agent.get_action(ob)
         next_ob, reward, done, info = env.step(action)
         ob = next_ob
         replay += env.render() + "\n"
@@ -252,7 +255,7 @@ if __name__ == "__main__":
         if done:
             with open('replays/replay2.txt', 'w') as f:
                 f.write(replay)
-            sys.exit()
+            break
 
     # while True: 
     #     # Get all coins in current zone
