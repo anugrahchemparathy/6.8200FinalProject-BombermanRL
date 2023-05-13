@@ -12,6 +12,7 @@ from tqdm import tqdm
 from collections import deque
 from models import ActorModel, DQNetwork
 from dataclasses import dataclass
+import seaborn as sns
 
 
 def get_default_config():
@@ -112,7 +113,7 @@ class DQNAgent:
             ob=torch.tensor(ob),
             next_ob=torch.tensor(next_ob),
             action=torch.tensor(action),
-            reward=torch.tensor(reward),
+            reward=torch.tensor(reward, dtype=torch.float32),
             done=torch.tensor(done)
         ))
     
@@ -221,6 +222,12 @@ def main():
                                 'episode': np.arange(len(ep_rewards)), 
                                 'epsilon': agent.initial_epsilon})
         log.append(run_log)
+    
+    palette = sns.color_palette("hls", 1)
+    run_fig = sns.lineplot(x='episode', y='return', data=log[0], palette=palette)
+    
+    run_fig.savefig('DQN_test.png')
+    print(log[0])
     return log
 
 if __name__ == '__main__':
