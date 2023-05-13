@@ -6,19 +6,15 @@ import pandas as pd
 import random
 import gym
 from copy import deepcopy
-import env_tools.bomberman_env as bomberman_env
+import new_env as new_env
 from torch import optim
 from tqdm import tqdm
 from collections import deque
-
 from models import ActorModel
 
-import gym.utils.seeding as seeding
+
 def get_default_config():
-    env = DoorKeyEnv5x5()
-    env._np_random, seed_ = seeding.np_random(seed)
-    env.action_space.seed(seed)
-    env = ImgObsWrapper(env)
+    env = new_env()
     config = dict(
         env=env,
         learning_rate=0.00025,
@@ -67,14 +63,20 @@ class CyclicBuffer:
 
 class DQNAgent():
     """docstring for DQN"""
-    def __init__(self):
-        super(DQNAgent, self).__init__()
-        self.eval_net, self.target_net = ActorModel(), ActorModel()
-        self.memory_counter = 0
-        self.learn_step_counter = 0
-        self.memory = CyclicBuffer(capacity=MEMORY_CAPACITY)
-        self.optimizer = torch.optim.Adam(self.eval_net.parameters(), lr=LR)
-        self.loss_func = nn.HuberLoss()
+    env: gym.Env
+    learning_rate: float
+    gamma: float
+    memory_size: int
+    initial_epsilon: float
+    min_epsilon: float
+    max_epsilon_decay_steps: int
+    warmup_steps: int
+    batch_size: int
+    target_update_freq: int
+    enable_double_q: bool = False
+    disable_target_net: bool = False
+    device: str = None
+    tau: float = 0.995
 
     def reset(self):
         if self.device is None:
