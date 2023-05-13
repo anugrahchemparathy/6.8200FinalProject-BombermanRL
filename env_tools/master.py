@@ -1,5 +1,5 @@
 from new_env import BombermanEnv
-
+import sys
 env = BombermanEnv()
 
 # STATES
@@ -181,10 +181,6 @@ def bfs_through_crate(ob):
 
     return actions
 
-
-ob = env.reset()
-
-
 enum_2_action = {
     0: 'UP',
     1: 'DOWN',
@@ -222,29 +218,32 @@ def count_coins(ob):
     
     return count
 
-ob = env.reset()
-while True:
-    # Get all coins in current zone
+if __name__ == "__main__":
+    ob = env.reset()
     while True:
-        acts = bfs_to_coin(ob)
-        print("Actions", acts)
-        if len(acts)==0:
-            break
+        # Get all coins in current zone
+        while True:
+            acts = bfs_to_coin(ob)
+            print("Actions", acts)
+            if len(acts)==0:
+                break
+
+            for action in acts:
+                next_ob, reward, done, info = env.step(action)
+                print("Reward", reward, done)
+                if done:
+                    sys.exit()
+                ob = next_ob
+                print("COINS", count_coins(ob))
+
+        
+        print("Busting crates")
+        acts = bfs_through_crate(ob)
 
         for action in acts:
             next_ob, reward, done, info = env.step(action)
             print("Reward", reward, done)
             ob = next_ob
             print("COINS", count_coins(ob))
-
-    
-    print("Busting crates")
-    acts = bfs_through_crate(ob)
-
-    for action in acts:
-        next_ob, reward, done, info = env.step(action)
-        print("Reward", reward, done)
-        ob = next_ob
-        print("COINS", count_coins(ob))
 
 
