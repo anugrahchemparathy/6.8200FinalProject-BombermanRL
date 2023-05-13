@@ -210,7 +210,7 @@ class ExpertAgent():
         if len(self.q) > 0:
             x = self.q[0]
             self.q = self.q[1:]
-            return x
+            return x, dict()
 
         x, y = find_player(ob)
         
@@ -222,9 +222,9 @@ class ExpertAgent():
             if len(acts)==0:
                 acts = bfs_through_crate(ob)
         if len(acts) == 0:
-            return random.choice([LEFT, RIGHT, UP, DOWN])
+            return random.choice([LEFT, RIGHT, UP, DOWN]), dict()
         self.q = acts[1:]
-        return acts[0]
+        return acts[0], dict()
   
 
 
