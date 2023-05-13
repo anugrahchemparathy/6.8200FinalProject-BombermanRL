@@ -331,8 +331,12 @@ class BombermanEnv(gym.Env):
                 agent_view[coin.x, coin.y] = COIN
         
         # add bombs
-        for bomb in self.bombs:
-            bomb_plane[bomb.x, bomb.y] = BOMB
+        if game_settings.know_bomb_timer:
+            for bomb in self.bombs:
+                bomb_plane[bomb.x, bomb.y] = bomb.timer
+        else:
+            for bomb in self.bombs:
+                bomb_plane[bomb.x, bomb.y] = BOMB
         for explosion in self.explosions:
             for e in explosion.blast_coords:
                 bomb_plane[e[0], e[1]] = EXPLOSION

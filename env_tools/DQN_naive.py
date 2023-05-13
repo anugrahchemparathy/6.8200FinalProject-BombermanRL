@@ -2,40 +2,35 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
+import pandas as pd
 import random
 import gym
 from copy import deepcopy
-import env_tools.bomberman_env as bomberman_env
+import new_env as new_env
+from torch import optim
+from tqdm import tqdm
+from collections import deque
+from models import ActorModel
 
-from torchvision.models import resnet18
-from torch.autograd import Variable
 
-# hyper-parameters
-BATCH_SIZE = 128
-LR = 0.01
-GAMMA = 0.90
-EPISILO = 0.9
-MEMORY_CAPACITY = 20000
-Q_NETWORK_ITERATION = 100
-
-env = gym.make("Bomberman-v1") ### REPLACE WITH YOUR ENVIRONMENT
-env = env.unwrapped
-NUM_ACTIONS = env.action_space.n
-NUM_STATES = env.observation_space.shape[0]
-ENV_A_SHAPE = 0 if isinstance(env.action_space.sample(), int) else env.action_space.sample.shape
-
-class ResNet(nn.Module):
-    """docstring for ResNet"""
-    def __init__(self):
-        super(ResNet, self).__init__()
-        self.resnet = resnet18(pretrained=True)
-        num_ftrs = self.resnet.fc.in_features
-        self.resnet.fc = nn.Linear(num_ftrs, NUM_ACTIONS)
-
-    def forward(self,x):
-        x = self.resnet(x)
-        return x
-    
+def get_default_config():
+    env = new_env()
+    config = dict(
+        env=env,
+        learning_rate=0.00025,
+        gamma=0.99,
+        memory_size=200000,
+        initial_epsilon=1.0,
+        min_epsilon=0.1,
+        max_epsilon_decay_steps=100000,
+        warmup_steps=500,
+        target_update_freq=2000,
+        batch_size=32,
+        device=None,
+        disable_target_net=False,
+        enable_double_q=False
+    )
+    return config
 # create a replay buffer
 class CyclicBuffer:
     def __init__(self, capacity):
@@ -66,97 +61,155 @@ class CyclicBuffer:
     def clear(self):
         self.buffer.clear()
 
-class DQN():
+class DQNAgent():
     """docstring for DQN"""
-    def __init__(self):
-        super(DQN, self).__init__()
-        self.eval_net, self.target_net = ResNet(), ResNet()
-        self.memory_counter = 0
-        self.learn_step_counter = 0
-        self.memory = CyclicBuffer(capacity=MEMORY_CAPACITY)
-        self.optimizer = torch.optim.Adam(self.eval_net.parameters(), lr=LR)
-        self.loss_func = nn.HuberLoss()
+    env: gym.Env
+    learning_rate: float
+    gamma: float
+    memory_size: int
+    initial_epsilon: float
+    min_epsilon: float
+    max_epsilon_decay_steps: int
+    warmup_steps: int
+    batch_size: int
+    target_update_freq: int
+    enable_double_q: bool = False
+    disable_target_net: bool = False
+    device: str = None
+    tau: float = 0.995
 
-    def choose_action(self, state):
-        state = torch.unsqueeze(torch.FloatTensor(state), 0) # get a 1D array
-        if np.random.randn() <= EPISILO:# greedy policy
-            action_value = self.eval_net.forward(state)
-            action = torch.max(action_value, 1)[1].data.numpy()
-            action = action[0] if ENV_A_SHAPE == 0 else action.reshape(ENV_A_SHAPE)
-        else: # random policy
-            action = np.random.randint(0,NUM_ACTIONS)
-            action = action if ENV_A_SHAPE ==0 else action.reshape(ENV_A_SHAPE)
+    def reset(self):
+        if self.device is None:
+            self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+        self.qnet = ActorModel(self.env.action_space.n)
+        self.target_qnet = deepcopy(self.qnet)
+        self.memory = CyclicBuffer(self.memory_size)
+        self.optim = optim.Adam(self.qnet.parameters(), lr=self.learning_rate)
+        self.qnet.to(self.device)
+        self.target_qnet.to(self.device)
+
+        self.loss_criterion = nn.HuberLoss()
+        self.epsilon = self.initial_epsilon
+        self.ep_reduction = (self.epsilon - self.min_epsilon) / float(self.max_epsilon_decay_steps)
+
+    @torch.no_grad()
+    def get_action(self, ob, greedy_only=False):
+        ob = torch.from_numpy(np.expand_dims(ob, axis=0)).float().to(self.device)
+        q_val = self.qnet(ob)
+        action = self.epsilon_greedy_policy(q_val, greedy_only=greedy_only)
         return action
 
+    def epsilon_greedy_policy(self, q_values, greedy_only=False):
+        greedy_act = torch.argmax(q_values).cpu()
+        greedy = greedy_only or np.random.uniform() > self.epsilon
+        return greedy_act if greedy else self.env.action_space.sample()
 
-    def store_transition(self, state, action, reward, next_state, done):
+    def add_to_memory(self, ob, next_ob, action, reward, done):
         self.memory.append(dict(
-            ob=torch.tensor(state, dtype=torch.float32),
-            next_ob=torch.tensor(next_state, dtype=torch.float32),
+            ob=torch.tensor(ob),
+            next_ob=torch.tensor(next_ob),
             action=torch.tensor(action),
             reward=torch.tensor(reward),
             done=torch.tensor(done)
         ))
-        self.memory_counter += 1
+    
+    def update_Q(self):
+        # we only start updating the Q network if there are enough samples in the replay buffer
+        if len(self.memory) < self.warmup_steps:
+            return 0
 
+        b = self.memory.sample(self.batch_size)
+        batch = dict()
+        for key in self.memory[0]:
+            batch[key] = torch.stack([self.memory[idx][key] for idx in b]).to(self.device)
+            if key in ['action', 'reward', 'done']:
+                batch[key] = batch[key].unsqueeze(1)
+        q_curr = self.qnet(batch['ob'])
+        pred = q_curr.gather(1, batch['action'])
+        q_next = self.target_qnet(batch['next_ob'])
+        if self.enable_double_q:
+            action = torch.argmax(q_curr, 1).reshape(-1, 1)
+            maxQ = q_next.gather(1, action)
+        else:
+            with torch.no_grad():
+                maxQ = torch.max(q_next, 1)[0].unsqueeze(1)
 
-    def learn(self):
-        #update the parameters
-        if self.learn_step_counter % Q_NETWORK_ITERATION ==0:
-            self.target_net.load_state_dict(self.eval_net.state_dict())
-        self.learn_step_counter+=1
-
-        #sample batch from memory
-        # sample_index = np.random.choice(MEMORY_CAPACITY, BATCH_SIZE)
-        batch = self.memory.sample(self.batch_size)
-        batch_state = torch.stack([x["ob"] for x in batch])
-        batch_action = torch.stack([x["action"].cuda() for x in batch]).cuda()
-        batch_reward = torch.stack([x["reward"] for x in batch]).cuda()
-        batch_next_state = torch.stack([x["next_ob"] for x in batch if not x["done"]])
-        batch_done = torch.stack([x["done"] for x in batch]).cuda()
-        batch_not_done = [not x["done"] for x in batch]
-
-        
-        if ob_batch.shape[1] != 3:
-            ob_batch = ob_batch.permute(0, 3, 1, 2)
-        if next_ob_batch.shape[1] != 3:
-            next_ob_batch = next_ob_batch.permute(0, 3, 1, 2)
-        
-
-        #q_eval
-        q_eval = self.eval_net(batch_state).gather(1, batch_action.unsqueeze(1))
-        q_next = torch.zeros(self.batch_size, device=self.device)
-        with torch.no_grad():
-            q_next[batch_not_done] = self.target_net(batch_next_state).detach().max(1)[0]
-        q_target = batch_reward + GAMMA * q_next
-        loss = self.loss_func(q_eval, q_target.unsqueeze(1))
-
-        self.optimizer.zero_grad()
+        target = batch['reward'] + self.gamma * maxQ * (~batch['done'])
+        loss = self.loss_criterion(pred, target)
+        self.optim.zero_grad()
         loss.backward()
-        self.optimizer.step()
+        self.optim.step()
+
+        return loss.item()
+    
+    def decay_epsilon(self):
+        if self.epsilon - self.ep_reduction >= self.min_epsilon:
+            self.epsilon -= self.ep_reduction
+
+    def update_target_qnet(self, step):
+        if step % self.target_update_freq == 0:
+            for target_param, param in zip(self.target_qnet.parameters(), self.qnet.parameters()):
+                target_param.data.copy_(
+                    param.data
+                )
 
 def main():
-    dqn = DQN()
-    episodes = 400
-    print("Collecting Experience....")
-    for i in range(episodes):
-        state = env.reset()
-        ep_reward = 0
-        while True:
-            # env.render()
-            action = dqn.choose_action(state)
-            next_state, reward, done, _ = env.step(action)
+    config = get_default_config()
+    agent = DQNAgent(**config)
+    show_progress = False
+    max_steps = 100000 
+    env = agent.env
+    n_runs = 1
 
-            dqn.store_transition(state, action, reward, next_state, done)
-            ep_reward += reward
+    rewards = []
+    log = []
 
-            if dqn.memory_counter >= MEMORY_CAPACITY:
-                dqn.learn()
-                if done:
-                    print("episode: {} , the episode reward is {}".format(i, round(ep_reward, 3)))
-            if done:
-                break
-            state = next_state
+    for i in tqdm(range(n_runs), desc='Runs'):
+        ep_rewards = []
+        ep_steps = []
+        agent.reset()
+        # we plot the smoothed return values
+        smooth_ep_return = deque(maxlen=10)
+        ob = env.reset()
+        ret = 0
+        num_ep = 0
+        for t in tqdm(range(max_steps), desc='Step'):
+            if len(agent.memory) < agent.warmup_steps:
+                action = env.action_space.sample()
+            else:
+                action = agent.get_action(ob)
+            next_ob, reward, done, truncated, info = env.step(action)
+            true_done = done and not info.get('TimeLimit.truncated', False)
+            agent.add_to_memory(ob, next_ob, action, reward, true_done)
+            agent.update_Q()
+            ret += reward
+            ob = next_ob
+            if done or truncated:
+                ob = env.reset()
+                smooth_ep_return.append(ret)
+                ep_rewards.append(np.mean(smooth_ep_return))
+                ep_steps.append(t)
+                ret = 0
+                num_ep += 1
+                if show_progress:
+                    print(f'Step:{t}  epsilon:{agent.epsilon}  '
+                        f'Smoothed Training Return:{np.mean(smooth_ep_return)}')
+                if num_ep % 10 == 0:
+                    test_ret = self.test()
+                    if show_progress:
+                        print('==========================')
+                        print(f'Step:{t} Testing Return: {test_ret}')
+            agent.decay_epsilon()
+            agent.update_target_qnet(t)
+
+        rewards.append(ep_rewards)
+        run_log = pd.DataFrame({'return': ep_rewards,  
+                                'steps': ep_steps,
+                                'episode': np.arange(len(ep_rewards)), 
+                                'epsilon': agent.initial_epsilon})
+        log.append(run_log)
+    return log
 
 if __name__ == '__main__':
     main()
