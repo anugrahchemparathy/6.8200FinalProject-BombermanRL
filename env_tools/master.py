@@ -63,7 +63,7 @@ def bfs_to_coin(ob):
     return []
 
 power = 1
-WAIT_TIME = 4
+WAIT_TIME = 6
 def get_blast_coords(x, y, arena):
         blast_coords = [(x, y)]
 
@@ -120,7 +120,7 @@ def place_bomb_and_dodge(ob, playerX, playerY, start=False):
         raise "Couldnt dodge"
 
     og_len = len(dodge_path)
-    if len(dodge_path) <= WAIT_TIME:
+    while len(dodge_path) <= WAIT_TIME:
         dodge_path.append(WAIT)
     if not start:
         for i in reversed(range(og_len)):
@@ -200,6 +200,9 @@ class ExpertAgent():
         self.q = []
 
     def get_action(self, ob, sample=True):
+        if len(ob.shape) == 4:
+            ob = ob.squeeze()
+            
         if len(self.q) > 0:
             x = self.q[0]
             self.q = self.q[1:]
@@ -227,12 +230,15 @@ if __name__ == "__main__":
     ob = env.reset()
     x, y = find_player(ob)
     startActs = place_bomb_and_dodge(ob, x, y, start=True)
-    print(ob[0])
+    replay = ""
+    replay += env.render() + "\n"
     for action in startActs:
         next_ob, reward, done, info = env.step(action)
         print(enum_2_action[action])
-        # print("Reward", reward, done)
-    print("FINISHED START")
+        replay += env.render() + "\n"
+
+    print(env.render())
+
     while True: 
         # Get all coins in current zone
         while True:
@@ -242,6 +248,9 @@ if __name__ == "__main__":
 
             for action in acts:
                 next_ob, reward, done, info = env.step(action)
+                print(env.render())
+                replay += env.render() + "\n"
+
                 print(enum_2_action[action])
                 # print("Reward", reward, done)
                 if done:
@@ -255,8 +264,12 @@ if __name__ == "__main__":
 
         for action in acts:
             next_ob, reward, done, info = env.step(action)
+            replay += env.render() + "\n"
+            print(env.render())
             print("Reward", reward, done)
             ob = next_ob
             print("COINS", count_coins(ob))
 
+    with open('replay.txt', 'w') as f:
+        f.write(replay)
 
