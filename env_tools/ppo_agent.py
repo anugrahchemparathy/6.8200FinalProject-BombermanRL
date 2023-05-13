@@ -1,4 +1,5 @@
 from pathlib import Path
+import argparse
 
 import gym
 import torch
@@ -76,4 +77,7 @@ def train_ppo(out_file="ppo"):
         pickle.dump(engine, f)
 
 if __name__ == '__main__':
-    train_ppo("ppo_maze_timer_true")
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--savedir', default='ppo', type=str)
+    args = parser.parse_args()
+    train_ppo(args)
