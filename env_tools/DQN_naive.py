@@ -13,6 +13,7 @@ from collections import deque
 from models import ActorModel, DQNetwork
 from dataclasses import dataclass
 import seaborn as sns
+import matplotlib.pyplot as plt
 
 
 def get_default_config():
@@ -226,7 +227,7 @@ def main():
     palette = sns.color_palette("hls", 1)
     run_fig = sns.lineplot(x='episode', y='return', data=log[0], palette=palette)
     
-    run_fig.savefig('DQN_test.png')
+    plt.savefig('DQN_test.png')
     print(log[0])
     return log
 
