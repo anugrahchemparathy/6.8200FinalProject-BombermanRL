@@ -78,6 +78,6 @@ def train_ppo(out_file="ppo"):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--savedir', default='ppo', type=str)
+    parser.add_argument('--savedir', type=str)
     args = parser.parse_args()
-    train_ppo(args)
+    train_ppo(args.savedir)
