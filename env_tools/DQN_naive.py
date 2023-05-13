@@ -9,22 +9,9 @@ from copy import deepcopy
 import env_tools.bomberman_env as bomberman_env
 from torch import optim
 from tqdm import tqdm
+from collections import deque
 
 from models import ActorModel
-
-# hyper-parameters
-BATCH_SIZE = 128
-LR = 0.01
-GAMMA = 0.90
-EPISILO = 0.9
-MEMORY_CAPACITY = 20000
-Q_NETWORK_ITERATION = 100
-
-env = gym.make("Bomberman-v1") ### REPLACE WITH YOUR ENVIRONMENT
-env = env.unwrapped
-NUM_ACTIONS = env.action_space.n
-NUM_STATES = env.observation_space.shape[0]
-ENV_A_SHAPE = 0 if isinstance(env.action_space.sample(), int) else env.action_space.sample.shape
 
 import gym.utils.seeding as seeding
 def get_default_config():
