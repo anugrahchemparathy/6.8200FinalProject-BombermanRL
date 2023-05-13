@@ -6,15 +6,15 @@ import logging
 
 reward_table = {
     # Display
-    'place_bomb': 1.5,
-    'valid_move': 1,
-    'wait': -20,
-    'invalid_action': -20,
-    'collect_coin': 25,
+    'place_bomb': -5,
+    'valid_move': -10,
+    'wait': -15,
+    'invalid_action': -40,
+    'collect_coin': 100,
     'invert_previous_action_penalty': -10,
     
     'game_timeout': -50000,
-    'destroy_crate': 100,
+    'destroy_crate': 700,
     'killed_opponent': 10,
     'agent_died': -1000,
     'survive_round': 1000,
