@@ -1,5 +1,6 @@
 from pathlib import Path
 import argparse
+from collections import namedtuple
 
 import gym
 import torch
@@ -22,12 +23,13 @@ from easyrl.utils.gym_util import make_vec_env
 
 import new_env as bomberman_env
 from models import ActorModel
+from settings import settings, game_settings
 
 def set_configs(exp_name='ppo_base'):
     set_config('ppo')
     cfg.alg.num_envs = 1
     cfg.alg.episode_steps = 150
-    cfg.alg.max_steps = 600000
+    cfg.alg.max_steps = 15000
     cfg.alg.device = 'cuda' if torch.cuda.is_available() else 'cpu'
     cfg.alg.env_name = 'Bomberman-v1'
     cfg.alg.save_dir = Path.cwd().absolute().joinpath('data').as_posix()
@@ -38,7 +40,15 @@ def set_configs(exp_name='ppo_base'):
     print(f'      Device:{cfg.alg.device}')
     print(f'====================================')
 
-def train_ppo(out_file="ppo"):
+def construct_agent(actor_body, critic_body, env):
+    actor = CategoricalPolicy(actor_body,
+                                in_features=64,
+                                action_dim=env.action_space.n)
+
+    critic = ValueNet(critic_body, in_features=64)
+    return PPOAgent(actor=actor, critic=critic, env=env)
+
+def train_ppo(game_settings=game_settings, out_file="ppo"):
     set_configs(out_file)
 
     set_random_seed(cfg.alg.seed)
@@ -52,12 +62,8 @@ def train_ppo(out_file="ppo"):
     actor_body = ActorModel(act_size)
     critic_body = ActorModel(act_size)
 
-    actor = CategoricalPolicy(actor_body,
-                                in_features=64,
-                                action_dim=act_size)
-
-    critic = ValueNet(critic_body, in_features=64)
-    agent = PPOAgent(actor=actor, critic=critic, env=env)
+    agent = construct_agent(actor_body, critic_body, env)
+    # print(agent.actor.body, agent.critic.body)
     runner = EpisodicRunner(agent=agent, env=env)
     engine = ModPPOEngine(agent=agent,
                        runner=runner)
@@ -70,14 +76,22 @@ def train_ppo(out_file="ppo"):
                                                sleep_time=0.04)
         import pprint
         pprint.pprint(stat_info)
+    torch.save(agent.actor.body.state_dict(), f'saved_runs/actors/{out_file}.pth')
+    torch.save(agent.critic.body.state_dict(), f'saved_runs/critics/{out_file}.pth')
     env.close()
-    with open(f"saved_runs/agents/{out_file}.pkl", "wb") as f:
-        pickle.dump(agent, f)
-    with open(f"saved_runs/engines/{out_file}.pkl", "wb") as f:
-        pickle.dump(engine, f)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--savedir', type=str)
+    # for key in settings:
+    #     if type(settings[key]) in [int, bool]:
+    #         parser.add_argument(f'--{key}', default=settings[key], type=type(settings[key]))
     args = parser.parse_args()
-    train_ppo(args.savedir)
+    # new_settings = dict()
+    # for key in settings:
+    #     if key in vars(args).keys():
+    #         new_settings[key] = getattr(args, key)
+    #     else:
+    #         new_settings[key] = settings[key]
+    # new_game_settings = namedtuple("Settings", new_settings.keys())(*new_settings.values())
+    train_ppo(out_file=args.savedir)
