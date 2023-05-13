@@ -184,6 +184,7 @@ class BombermanEnv(gym.Env):
         reward += curiosity_reward - CURIOSITY_BASELINE
 
         # collect coins
+        num_coins = 0
         for coin in self.coins:
             if coin.collectable:
                 a = self.player
@@ -194,8 +195,9 @@ class BombermanEnv(gym.Env):
                     a.update_score(game_settings.reward_coin)
                     a.events.append(event_ids.COIN_COLLECTED)
                     reward += rewards.collect_coin
+                    num_coins = 1
 
-        return reward
+        return reward, num_coins
 
     """
     explodes bomb and modifies state of all crates in blasted area. creates a new explosion.
@@ -290,7 +292,8 @@ class BombermanEnv(gym.Env):
         reward = 0
         
         # player locations
-        reward += self.update_player_loc(action)
+        r, c = self.update_player_loc(action)
+        reward += r
         
         # update bombs
         for bomb in self.bombs:
@@ -315,7 +318,7 @@ class BombermanEnv(gym.Env):
         # if done:
         #     self.render()
 
-        return (self._get_obs(), reward, done, {})
+        return (self._get_obs(), reward, done, {'coin': c})
 
     # get current state
     def _get_obs(self):

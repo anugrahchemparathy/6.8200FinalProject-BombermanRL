@@ -13,6 +13,7 @@ def read_tf_log(log_dir):
     event_acc = EventAccumulator(log_file.as_posix())
     event_acc.Reload()
     tags = event_acc.Tags()
+    print(tags)
     # scalar_success = event_acc.Scalars('train/episode_success')
     scalar_return = event_acc.Scalars('train/episode_return/mean')
     # success_rate = [x.value for x in scalar_success]

@@ -9,7 +9,8 @@ from easyrl.agents.ppo_agent import PPOAgent
 from easyrl.configs import cfg
 from easyrl.configs import set_config
 from easyrl.configs.command_line import cfg_from_cmd
-from easyrl.engine.ppo_engine import PPOEngine
+# from easyrl.engine.ppo_engine import PPOEngine
+from mod_ppo_engine import ModPPOEngine
 from easyrl.models.categorical_policy import CategoricalPolicy
 from easyrl.models.diag_gaussian_policy import DiagGaussianPolicy
 from easyrl.models.mlp import MLP
@@ -57,7 +58,7 @@ def train_ppo(out_file="ppo"):
     critic = ValueNet(critic_body, in_features=64)
     agent = PPOAgent(actor=actor, critic=critic, env=env)
     runner = EpisodicRunner(agent=agent, env=env)
-    engine = PPOEngine(agent=agent,
+    engine = ModPPOEngine(agent=agent,
                        runner=runner)
     if not cfg.alg.test:
         engine.train()
