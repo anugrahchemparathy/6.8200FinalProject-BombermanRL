@@ -1,4 +1,5 @@
 from pathlib import Path
+import argparse
 
 import gym
 import torch
@@ -70,8 +71,13 @@ def train_ppo(out_file="ppo"):
         import pprint
         pprint.pprint(stat_info)
     env.close()
-    pickle.dump(agent, f"saved_runs/agents/{out_file}.pkl")
-    pickle.dump(engine, f"saved_runs/engines/{out_file}.pkl")
+    with open(f"saved_runs/agents/{out_file}.pkl", "wb") as f:
+        pickle.dump(agent, f)
+    with open(f"saved_runs/engines/{out_file}.pkl", "wb") as f:
+        pickle.dump(engine, f)
 
 if __name__ == '__main__':
-    train_ppo("ppo_maze")
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--savedir', default='ppo', type=str)
+    args = parser.parse_args()
+    train_ppo(args)

@@ -54,6 +54,32 @@ class ActorModel(nn.Module):
         x = self.actor(embedding)
 
         return x
+    
+
+class DQNetwork(nn.Module):
+    def __init__(self, action_dim):
+        super().__init__()
+        self.conv_net = nn.Sequential(
+            nn.Conv2d(2, 4, (2, 2)),
+            nn.ReLU(),
+            nn.MaxPool2d((2, 2)),
+            nn.Conv2d(4, 8, (2, 2)),
+            nn.ReLU(),
+            nn.Conv2d(8, 16, (2, 2)),
+            nn.ReLU()
+        )
+        self.fcs = nn.Sequential(
+            nn.Linear(576, 64),
+            nn.ReLU(),
+            nn.Linear(64, action_dim)
+        )
+
+    def forward(self, ob):
+        x = ob.to(torch.float32)
+        x = self.conv_net(x)
+        x = x.reshape(x.shape[0], -1)
+        x = self.fcs(x)
+        return x
 
 
 

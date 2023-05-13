@@ -54,7 +54,7 @@ settings = {
     'reward_kill': 5,
     'reward_coin': 1,
     'reward_slow': -1,
-    'know_bomb_timer': False,
+    'know_bomb_timer': True,
 
     # User input
     'input_map': {
