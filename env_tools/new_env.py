@@ -308,13 +308,14 @@ class BombermanEnv(gym.Env):
         done = self.check_if_all_coins_collected() or self.all_players_dead() or self.round > 500
 
         if self.round > 500:
+            print("AGENT RAN OUT OF TIME")
             reward += rewards.game_timeout
         if not self.player.alive:
             reward += rewards.agent_died
         
         # print('did action', enum_2_action[action], 'got reward', reward, 'done', done, 'round', self.round)
-        # if self.all_players_dead():
-        #     print('AGENT DIED')
+        if self.all_players_dead():
+            print('AGENT DIED', self.round)
         # if done:
         #     self.render()
 
