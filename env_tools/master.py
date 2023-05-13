@@ -207,8 +207,11 @@ class ExpertAgent():
         acts = bfs_to_coin(ob)
         if len(acts)==0:
             acts = bfs_through_crate(ob)
+        
+        self.q = acts[1:]
+        return acts[0]
   
-  
+
 
 def count_coins(ob):
     count = 0
