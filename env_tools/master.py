@@ -239,16 +239,8 @@ def count_coins(ob):
 
 if __name__ == "__main__":
     ob = env.reset()
-    # x, y = find_player(ob)
-    # startActs = place_bomb_and_dodge(ob, x, y, start=True)
     replay = ""
     replay += env.render() + "\n"
-    # for action in startActs:
-    #     next_ob, reward, done, info = env.step(action)
-    #     print(enum_2_action[action])
-    #     replay += env.render() + "\n"
-
-    # print(env.render())
     agent = ExpertAgent()
     while True:
         action = agent.get_action(ob)
