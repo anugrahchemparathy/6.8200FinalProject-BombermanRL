@@ -305,9 +305,9 @@ class BombermanEnv(gym.Env):
         self.place_explosions()
 
         self.round = self.round+1
-        done = self.check_if_all_coins_collected() or self.all_players_dead() or self.round > 200
+        done = self.check_if_all_coins_collected() or self.all_players_dead() or self.round > 500
 
-        if self.round > 200:
+        if self.round > 500:
             reward += rewards.game_timeout
         if not self.player.alive:
             reward += rewards.agent_died

@@ -161,7 +161,7 @@ class DQNAgent:
 def main():
     config = get_default_config()
     agent = DQNAgent(**config)
-    show_progress = False
+    show_progress = True
     max_steps = 100000 
     env = agent.env
     n_runs = 1
@@ -190,6 +190,7 @@ def main():
             ret += reward
             ob = next_ob
             if done:
+                print('we done')
                 ob = env.reset()
                 smooth_ep_return.append(ret)
                 ep_rewards.append(np.mean(smooth_ep_return))
