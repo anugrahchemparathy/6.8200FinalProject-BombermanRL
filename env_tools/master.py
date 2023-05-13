@@ -181,6 +181,7 @@ def bfs_through_crate(ob):
             expect_ob[0][ogX, ogY] = FREE
             expect_ob[0][playerX - dirs[act][0], playerY - dirs[act][1]] = PLAYER
             actions.extend(place_bomb_and_dodge(expect_ob, playerX - dirs[act][0], playerY - dirs[act][1]))
+            break
         else:
             actions.append(act)
 
@@ -195,22 +196,29 @@ enum_2_action = {
     5: 'WAIT',
 }
 
+import numpy as np
 class ExpertAgent():
     def __init__(self) -> None:
         self.q = []
 
     def get_action(self, ob, sample=True):
         if len(ob.shape) == 4:
-            ob = ob.squeeze()
-            
+            ob = np.squeeze(ob)
+
         if len(self.q) > 0:
             x = self.q[0]
             self.q = self.q[1:]
             return x
+
+        x, y = find_player(ob)
         
-        acts = bfs_to_coin(ob)
-        if len(acts)==0:
-            acts = bfs_through_crate(ob)
+        if ob[1][x, y] > 1:
+            print("Starting mode")
+            acts = place_bomb_and_dodge(ob, x, y, start=True)
+        else:
+            acts = bfs_to_coin(ob)
+            if len(acts)==0:
+                acts = bfs_through_crate(ob)
         
         self.q = acts[1:]
         return acts[0]
@@ -228,48 +236,63 @@ def count_coins(ob):
 
 if __name__ == "__main__":
     ob = env.reset()
-    x, y = find_player(ob)
-    startActs = place_bomb_and_dodge(ob, x, y, start=True)
+    # x, y = find_player(ob)
+    # startActs = place_bomb_and_dodge(ob, x, y, start=True)
     replay = ""
     replay += env.render() + "\n"
-    for action in startActs:
+    # for action in startActs:
+    #     next_ob, reward, done, info = env.step(action)
+    #     print(enum_2_action[action])
+    #     replay += env.render() + "\n"
+
+    # print(env.render())
+    agent = ExpertAgent()
+    while True:
+        action = agent.get_action(ob)
         next_ob, reward, done, info = env.step(action)
-        print(enum_2_action[action])
+        ob = next_ob
         replay += env.render() + "\n"
+        print(enum_2_action[action])
+        print(env.render())
+        if done:
+            with open('replays/replay2.txt', 'w') as f:
+                f.write(replay)
+            sys.exit()
 
-    print(env.render())
+    # while True: 
+    #     # Get all coins in current zone
+    #     while True:
+    #         acts = bfs_to_coin(ob)
+    #         if len(acts)==0:
+    #             break
 
-    while True: 
-        # Get all coins in current zone
-        while True:
-            acts = bfs_to_coin(ob)
-            if len(acts)==0:
-                break
+    #         for action in acts:
+    #             next_ob, reward, done, info = env.step(action)
+    #             print(env.render())
+    #             replay += env.render() + "\n"
+    #             print(enum_2_action[action])
 
-            for action in acts:
-                next_ob, reward, done, info = env.step(action)
-                print(env.render())
-                replay += env.render() + "\n"
-
-                print(enum_2_action[action])
-                # print("Reward", reward, done)
-                if done:
-                    sys.exit()
-                ob = next_ob
-                print("COINS", count_coins(ob))
+    #             if done:
+    #                 with open('replay.txt', 'w') as f:
+    #                     f.write(replay)
+    #                 sys.exit()
+    #             ob = next_ob
+    #             print("COINS", count_coins(ob))
 
         
-        print("Busting crates")
-        acts = bfs_through_crate(ob)
+    #     print("Busting crates")
+    #     acts = bfs_through_crate(ob)
 
-        for action in acts:
-            next_ob, reward, done, info = env.step(action)
-            replay += env.render() + "\n"
-            print(env.render())
-            print("Reward", reward, done)
-            ob = next_ob
-            print("COINS", count_coins(ob))
+    #     for action in acts:
+    #         next_ob, reward, done, info = env.step(action)
+    #         replay += env.render() + "\n"
+    #         if done:
+    #                 with open('replay.txt', 'w') as f:
+    #                     f.write(replay)
+    #                 sys.exit()
+    #         print(env.render())
+    #         print("Reward", reward, done)
+    #         ob = next_ob
+    #         print("COINS", count_coins(ob))
 
-    with open('replay.txt', 'w') as f:
-        f.write(replay)
 
