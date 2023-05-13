@@ -6,15 +6,16 @@ import pandas as pd
 import random
 import gym
 from copy import deepcopy
-import new_env as new_env
+from new_env import BombermanEnv
 from torch import optim
 from tqdm import tqdm
 from collections import deque
 from models import ActorModel
+from dataclasses import dataclass
 
 
 def get_default_config():
-    env = new_env()
+    env = BombermanEnv()
     config = dict(
         env=env,
         learning_rate=0.00025,
@@ -61,7 +62,8 @@ class CyclicBuffer:
     def clear(self):
         self.buffer.clear()
 
-class DQNAgent():
+@dataclass
+class DQNAgent:
     """docstring for DQN"""
     env: gym.Env
     learning_rate: float
@@ -122,7 +124,7 @@ class DQNAgent():
         b = self.memory.sample(self.batch_size)
         batch = dict()
         for key in self.memory[0]:
-            batch[key] = torch.stack([self.memory[idx][key] for idx in b]).to(self.device)
+            batch[key] = torch.stack([idx[key] for idx in b]).to(self.device)
             if key in ['action', 'reward', 'done']:
                 batch[key] = batch[key].unsqueeze(1)
         q_curr = self.qnet(batch['ob'])
@@ -179,13 +181,13 @@ def main():
                 action = env.action_space.sample()
             else:
                 action = agent.get_action(ob)
-            next_ob, reward, done, truncated, info = env.step(action)
-            true_done = done and not info.get('TimeLimit.truncated', False)
+            next_ob, reward, done, info = env.step(action)
+            true_done = done
             agent.add_to_memory(ob, next_ob, action, reward, true_done)
             agent.update_Q()
             ret += reward
             ob = next_ob
-            if done or truncated:
+            if done:
                 ob = env.reset()
                 smooth_ep_return.append(ret)
                 ep_rewards.append(np.mean(smooth_ep_return))
@@ -196,7 +198,17 @@ def main():
                     print(f'Step:{t}  epsilon:{agent.epsilon}  '
                         f'Smoothed Training Return:{np.mean(smooth_ep_return)}')
                 if num_ep % 10 == 0:
-                    test_ret = self.test()
+                    ob = env.reset()
+                    test_ret = 0
+                    for i in range(100):
+                        action = agent.get_action(ob, greedy_only=True)
+                        next_ob, reward, done, info = env.step(action)
+                        test_ret += reward
+                        ob = next_ob
+                        if done:
+                            break
+                    
+                    # test_ret = self.test()
                     if show_progress:
                         print('==========================')
                         print(f'Step:{t} Testing Return: {test_ret}')
