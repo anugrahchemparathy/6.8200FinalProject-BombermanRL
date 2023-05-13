@@ -25,13 +25,16 @@ dirs = {
     DOWN: (1, 0)
 }
 
-def bfs_to_coin(ob):
+def find_player(ob):
     playerX, playerY = None, None
     for i in range(17):
         for j in range(17):
             if ob[0][i][j] == PLAYER:
                 playerX, playerY = i, j
+    return playerX, playerY
 
+def bfs_to_coin(ob):
+    playerX, playerY = find_player(ob)
     print("player", playerX, playerY)
     q = [(playerX, playerY, [])]
     ind = 0
@@ -79,8 +82,10 @@ def get_blast_coords(x, y, arena):
 
         return blast_coords
 
-def place_bomb_and_dodge(ob, playerX, playerY):
+def place_bomb_and_dodge(ob, playerX, playerY, start=False):
     actions = [BOMB]
+    if start:
+        actions = []
     blast = set(get_blast_coords(playerX, playerY, ob[0]))
     print("Bomb", playerX, playerY)
     print(blast)
@@ -117,16 +122,16 @@ def place_bomb_and_dodge(ob, playerX, playerY):
     og_len = len(dodge_path)
     if len(dodge_path) <= WAIT_TIME:
         dodge_path.append(WAIT)
-    
-    for i in reversed(range(og_len)):
-        if dodge_path[i] == LEFT:
-            dodge_path.append(RIGHT)
-        elif dodge_path[i] == RIGHT:
-            dodge_path.append(LEFT)
-        elif dodge_path[i] == UP:
-            dodge_path.append(DOWN)
-        elif dodge_path[i] == DOWN:
-            dodge_path.append(UP)
+    if not start:
+        for i in reversed(range(og_len)):
+            if dodge_path[i] == LEFT:
+                dodge_path.append(RIGHT)
+            elif dodge_path[i] == RIGHT:
+                dodge_path.append(LEFT)
+            elif dodge_path[i] == UP:
+                dodge_path.append(DOWN)
+            elif dodge_path[i] == DOWN:
+                dodge_path.append(UP)
         
     actions.extend(dodge_path)
 
@@ -194,7 +199,7 @@ class ExpertAgent():
     def __init__(self) -> None:
         self.q = []
 
-    def get_action(self, ob):
+    def get_action(self, ob, sample=True):
         if len(self.q) > 0:
             x = self.q[0]
             self.q = self.q[1:]
@@ -220,17 +225,25 @@ def count_coins(ob):
 
 if __name__ == "__main__":
     ob = env.reset()
-    while True:
+    x, y = find_player(ob)
+    startActs = place_bomb_and_dodge(ob, x, y, start=True)
+    print(ob[0])
+    for action in startActs:
+        next_ob, reward, done, info = env.step(action)
+        print(enum_2_action[action])
+        # print("Reward", reward, done)
+    print("FINISHED START")
+    while True: 
         # Get all coins in current zone
         while True:
             acts = bfs_to_coin(ob)
-            print("Actions", acts)
             if len(acts)==0:
                 break
 
             for action in acts:
                 next_ob, reward, done, info = env.step(action)
-                print("Reward", reward, done)
+                print(enum_2_action[action])
+                # print("Reward", reward, done)
                 if done:
                     sys.exit()
                 ob = next_ob
