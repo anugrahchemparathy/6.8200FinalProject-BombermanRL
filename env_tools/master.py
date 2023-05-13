@@ -198,6 +198,7 @@ enum_2_action = {
 }
 
 import numpy as np
+import random
 class ExpertAgent():
     def __init__(self) -> None:
         self.q = []
@@ -220,7 +221,8 @@ class ExpertAgent():
             acts = bfs_to_coin(ob)
             if len(acts)==0:
                 acts = bfs_through_crate(ob)
-        
+        if len(acts) == 0:
+            return random.choice([LEFT, RIGHT, UP, DOWN])
         self.q = acts[1:]
         return acts[0]
   
