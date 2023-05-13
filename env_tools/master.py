@@ -115,9 +115,10 @@ def place_bomb_and_dodge(ob, playerX, playerY, start=False):
                     q.append((curX+dirX, curY+dirY, path+[key]))
         ind+=1
     
-    print("DODGE PATH", [enum_2_action[x] for x in dodge_path])
+    # print("DODGE PATH", [enum_2_action[x] for x in dodge_path])
     if dodge_path is None:
-        raise "Couldnt dodge"
+        return actions
+    #     raise "Couldnt dodge"
 
     og_len = len(dodge_path)
     while len(dodge_path) <= WAIT_TIME:
@@ -145,7 +146,7 @@ def bfs_through_crate(ob):
             if ob[0][i][j] == PLAYER:
                 playerX, playerY = i, j
     ogX, ogY = playerX, playerY
-    print("player", playerX, playerY)
+    # print("player", playerX, playerY)
     q = [(playerX, playerY, [])]
     ind = 0
     visited = set()
@@ -213,7 +214,7 @@ class ExpertAgent():
         x, y = find_player(ob)
         
         if ob[1][x, y] > 1:
-            print("Starting mode")
+            # print("Starting mode")
             acts = place_bomb_and_dodge(ob, x, y, start=True)
         else:
             acts = bfs_to_coin(ob)
