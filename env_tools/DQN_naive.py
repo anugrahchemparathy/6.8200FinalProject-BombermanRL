@@ -10,7 +10,7 @@ from new_env import BombermanEnv
 from torch import optim
 from tqdm import tqdm
 from collections import deque
-from models import ActorModel
+from models import ActorModel, DQNetwork
 from dataclasses import dataclass
 
 
@@ -84,7 +84,7 @@ class DQNAgent:
         if self.device is None:
             self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-        self.qnet = ActorModel(self.env.action_space.n)
+        self.qnet = DQNetwork(self.env.action_space.n)
         self.target_qnet = deepcopy(self.qnet)
         self.memory = CyclicBuffer(self.memory_size)
         self.optim = optim.Adam(self.qnet.parameters(), lr=self.learning_rate)
