@@ -36,8 +36,8 @@ def set_configs(exp_name='ppo_base'):
     print(f'      Device:{cfg.alg.device}')
     print(f'====================================')
 
-def main():
-    set_configs()
+def train_ppo(out_file="ppo"):
+    set_configs(out_file)
 
     set_random_seed(cfg.alg.seed)
     env = make_vec_env(cfg.alg.env_name,
@@ -69,9 +69,8 @@ def main():
         import pprint
         pprint.pprint(stat_info)
     env.close()
-    name = "ppo_base"
-    pickle.dump(agent, f"saved_runs/agents/{name}.pkl")
-    pickle.dump(engine, f"saved_runs/engines/{name}.pkl")
+    pickle.dump(agent, f"saved_runs/agents/{out_file}.pkl")
+    pickle.dump(engine, f"saved_runs/engines/{out_file}.pkl")
 
 if __name__ == '__main__':
-    main()
+    train_ppo("ppo_maze")

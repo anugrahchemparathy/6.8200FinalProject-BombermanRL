@@ -272,7 +272,7 @@ class BombermanEnv(gym.Env):
     def reset(self, artificial_start_position=None):
         self.round = 0
         agent_start_position = self.generate_arena()
-        print('agent_start_position: ', agent_start_position)
+        # print('agent_start_position: ', agent_start_position)
         if artificial_start_position is not None:
             self.player = Agent(1, artificial_start_position)
         else:
@@ -309,11 +309,11 @@ class BombermanEnv(gym.Env):
         if not self.player.alive:
             reward += rewards.agent_died
         
-        print('did action', enum_2_action[action], 'got reward', reward, 'done', done, 'round', self.round)
-        if self.all_players_dead():
-            print('AGENT DIED')
-        if done:
-            self.render()
+        # print('did action', enum_2_action[action], 'got reward', reward, 'done', done, 'round', self.round)
+        # if self.all_players_dead():
+        #     print('AGENT DIED')
+        # if done:
+        #     self.render()
 
         return (self._get_obs(), reward, done, {})
 
@@ -371,7 +371,7 @@ class BombermanEnv(gym.Env):
         for row in rendered_map:
             out_string += ''.join([ITEM_2_EMOJI[r] for r in row]) + '\n'
         
-        print(out_string)
+        # print(out_string)
         return out_string
 
 
