@@ -305,6 +305,7 @@ class BombermanEnv(gym.Env):
         self.place_explosions()
 
         self.round = self.round+1
+        success = self.check_if_all_coins_collected()
         done = self.check_if_all_coins_collected() or self.all_players_dead() or self.round > 500
 
         if self.round > 500:
@@ -318,7 +319,7 @@ class BombermanEnv(gym.Env):
         # if done:
         #     self.render()
 
-        return (self._get_obs(), reward, done, {'coin': c})
+        return (self._get_obs(), reward, done, {'coin': c, 'success': success})
 
     # get current state
     def _get_obs(self):

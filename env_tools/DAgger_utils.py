@@ -1,3 +1,4 @@
+from easyrl.models.categorical_policy import CategoricalPolicy
 from easyrl.models.diag_gaussian_policy import DiagGaussianPolicy
 from easyrl.models.mlp import MLP
 import numpy as np
@@ -17,21 +18,26 @@ from tqdm import tqdm
 from easyrl.utils.common import save_traj
 from easyrl.configs import cfg
 from dataclasses import dataclass
+from models import ActorModel
 
 
 
 def create_actor(env):
-    print(env.observation_space.shape, env.action_space.n)
-    ob_dim = env.observation_space.shape[0]
-    action_dim = env.action_space.n
-    actor_body = MLP(input_size=ob_dim,
-                    hidden_sizes=[64],
-                    output_size=64,
-                    hidden_act=nn.Tanh,
-                    output_act=nn.Tanh)
-    actor = DiagGaussianPolicy(actor_body,
-                               in_features=64,
-                               action_dim=action_dim)
+    #print(env.observation_space.shape, env.action_space.n)
+    actor_body = ActorModel(env.action_space.n)
+    #ob_dim = env.observation_space.shape[0]
+    #print(env.observation_space.shape, action_dim)
+    # actor_body = MLP(input_size=ob_dim,
+    #                 hidden_sizes=[64],
+    #                 output_size=64,
+    #                 hidden_act=nn.Tanh,
+    #                 output_act=nn.Tanh)
+    actor = CategoricalPolicy(actor_body,
+                                in_features=64,
+                                action_dim=env.action_space.n)
+    # actor = DiagGaussianPolicy(actor_body,
+    #                            in_features=64,
+    #                            action_dim=env.action_space.n)
     return actor
 
 def generate_demonstration_data(expert_agent, env, num_trials):
@@ -60,6 +66,7 @@ def eval_agent(agent, env, num_trials, disable_tqdm=False, render=False):
         tsps = traj.steps_til_done.copy().tolist()
         rewards = traj.raw_rewards
         infos = traj.infos
+        #print(infos)
         for ej in range(rewards.shape[1]):
             ret = np.sum(rewards[:tsps[ej], ej])
             rets.append(ret)

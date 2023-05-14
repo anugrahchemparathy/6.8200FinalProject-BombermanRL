@@ -35,7 +35,7 @@ def find_player(ob):
 
 def bfs_to_coin(ob):
     playerX, playerY = find_player(ob)
-    print("player", playerX, playerY)
+    #print("player", playerX, playerY)
     q = [(playerX, playerY, [])]
     ind = 0
     visited = set()
@@ -87,8 +87,8 @@ def place_bomb_and_dodge(ob, playerX, playerY, start=False):
     if start:
         actions = []
     blast = set(get_blast_coords(playerX, playerY, ob[0]))
-    print("Bomb", playerX, playerY)
-    print(blast)
+    #print("Bomb", playerX, playerY)
+    #print(blast)
 
     q = [(playerX, playerY, [])]
     dodge_path = None
@@ -98,7 +98,7 @@ def place_bomb_and_dodge(ob, playerX, playerY, start=False):
         curX, curY, path = q[ind]
 
         if not ((curX, curY) in blast):
-            print("Dodged")
+            #print("Dodged")
             dodge_path = path
             break
         

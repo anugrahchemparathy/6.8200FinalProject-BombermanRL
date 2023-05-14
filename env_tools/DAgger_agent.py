@@ -76,17 +76,16 @@ class BasicAgent:
         )
         return torch_to_np(action), action_info
 
-
+@dataclass
 class DaggerAgent():
-    def __init__(self, actor, expert_actor, lr):
-        self.actor = actor
-        self.expert_actor = expert_actor
-        self.lr = lr
+    actor: nn.Module
+    expert_actor: nn.Module
+    lr: float
 
     def __post_init__(self):
-        move_to([self.actor, self.expert_actor],
+        move_to([self.actor],
                 device=cfg.alg.device)
-        freeze_model(self.expert_actor)
+        #freeze_model(self.expert_actor)
         self.optimizer = optim.Adam(self.actor.parameters(),
                                     lr=self.lr)
     
@@ -108,7 +107,7 @@ class DaggerAgent():
         )
         # get the expert action from the expert policy
         exp_act_dist, _ = self.expert_actor.get_action(t_ob)
-        action_info['exp_act'] = exp_act_dist.mean
+        action_info['exp_act'] = exp_act_dist
         return torch_to_np(action), action_info
 
     def optimize(self, data, **kwargs):
@@ -171,10 +170,12 @@ class DaggerEngine:
         self.cur_step += traj.total_steps
 
         action_infos = traj.action_infos
-        exp_act = torch.stack([ainfo['exp_act'] for ainfo in action_infos])
+        #print(action_infos)
+        exp_act = [ainfo['exp_act'] for ainfo in action_infos]
+        #exp_act = torch.stack([ainfo['exp_act'] for ainfo in action_infos])
 
         self.dataset.add_traj(states=traj.obs,
-                              actions=exp_act.cpu())
+                              actions=exp_act)
         rollout_dataloader = DataLoader(self.dataset,
                                         batch_size=cfg.alg.batch_size,
                                         shuffle=True,
@@ -226,5 +227,5 @@ if __name__ == '__main__':
                                            num_trials=50)
     # expert_trajs = [np.array([])]
     trained_agent, sizes, success_rates = train_dagger(expert_actor, expert_trajs[:num_trajs], actor=agent.actor)
-    success_rate, ret_mean, ret_std, rets, successes = eval_agent(trained_agent, env, num_trials=200)
+    #success_rate, ret_mean, ret_std, rets, successes = eval_agent(trained_agent, env, num_trials=200)
     
