@@ -342,7 +342,7 @@ class BombermanEnv(gym.Env):
         if not self.player.alive:
             reward += rewards.agent_died
         
-        print('did action', enum_2_action[action], 'got reward', reward, 'done', done, 'round', self.round)
+        #print('did action', enum_2_action[action], 'got reward', reward, 'done', done, 'round', self.round)
         if self.all_players_dead():
             print('AGENT DIED, got coins', str(len([c for c in self.coins if c.collected])))
         if done:
