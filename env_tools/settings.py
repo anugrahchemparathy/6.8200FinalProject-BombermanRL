@@ -18,6 +18,8 @@ reward_table = {
     'killed_opponent': 10,
     'agent_died': -1000,
     'survive_round': 1000,
+    'new_position': 20,
+    'repeat_position': -10
 }
 rewards = namedtuple("Rewards", reward_table.keys())(*reward_table.values())
 
