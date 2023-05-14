@@ -38,7 +38,7 @@ from easyrl.utils.torch_util import torch_to_np
 def set_configs(exp_name='bc'):
     set_config('ppo')
     cfg.alg.num_envs = 1
-    cfg.alg.episode_steps = 150
+    cfg.alg.episode_steps = 500
     cfg.alg.max_steps = 600000
     cfg.alg.device = 'cuda' if torch.cuda.is_available() else 'cpu'
     cfg.alg.env_name = 'Bomberman-v1'
@@ -191,8 +191,8 @@ def train_dagger(expert_actor, trajs, actor=None):
     expert_actor = deepcopy(expert_actor)
     actor = deepcopy(actor)
     set_configs('dagger')
-    cfg.alg.episode_steps = 30
-    cfg.alg.max_steps = 1200
+    cfg.alg.episode_steps = 500
+    cfg.alg.max_steps = 600000
     cfg.alg.eval_interval = 1
     cfg.alg.log_interval = 1
     cfg.alg.batch_size = 256
@@ -216,20 +216,18 @@ def train_dagger(expert_actor, trajs, actor=None):
 if __name__ == '__main__':
     set_configs()
     env = make_vec_env(cfg.alg.env_name,
-                       cfg.alg.num_envs,
-                       seed=cfg.alg.seed)
+                      cfg.alg.num_envs,
+                      seed=cfg.alg.seed)
     env.reset()
     actor = create_actor(env)
     expert_actor = ExpertAgent()
     agent = BasicAgent(actor)
-    num_trajs = 50
+    num_trajs = 10
     expert_trajs = generate_demonstration_data(expert_agent=expert_actor,
-                                           env=env,
-                                           num_trials=50)
-    trained_agent, _, size = train_bc_agent(agent, trajs=expert_trajs[:num_trajs])
+                                          env=env,
+                                          num_trials=100)
+    bc_num_trajs = 100
+    trained_agent, _, size = train_bc_agent(agent, trajs=expert_trajs[:bc_num_trajs], disable_tqdm=True)
     print('trained')
-    success_rate_bc, ret_mean_bc, ret_std_bc, rets_bc, successes_bc = eval_agent(trained_agent, env, num_trials=200)
+    # success_rate_bc, ret_mean_bc, ret_std_bc, rets_bc, successes_bc = eval_agent(trained_agent, env, num_trials=200)
     # expert_trajs = [np.array([])]
-    trained_dagger_agent, dagger_sizes, dagger_success_rates = train_dagger(expert_actor, expert_trajs[:num_trajs], actor=trained_agent.actor)
-    dagr_success_rate, dgr_ret_mean, dgr_ret_std, dgr_rets, dgr_successes = eval_agent(trained_dagger_agent, env, num_trials=200)
-    
