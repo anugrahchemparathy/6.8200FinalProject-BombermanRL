@@ -149,6 +149,7 @@ class DaggerEngine:
     def train(self):
         success_rates = []
         dataset_sizes = []
+        optim_infos_list = []
         self.cur_step = 0
         for iter_t in count():
             if iter_t % cfg.alg.eval_interval == 0:
@@ -161,10 +162,11 @@ class DaggerEngine:
             # rollout the current policy and get a trajectory
             traj = self.runner(sample=True, get_last_val=False, time_steps=cfg.alg.episode_steps)
             # optimize the policy
-            self.train_once(traj)
+            optim_infos = self.train_once(traj)
+            optim_infos_list.append(optim_infos)
             if self.cur_step > cfg.alg.max_steps:
                 break
-        return dataset_sizes, success_rates
+        return optim_infos_list, dataset_sizes, success_rates
 
     def train_once(self, traj):
         self.cur_step += traj.total_steps
@@ -186,6 +188,7 @@ class DaggerEngine:
             for batch_ndx, batch_data in enumerate(rollout_dataloader):
                 optim_info = self.agent.optimize(batch_data)
                 optim_infos.append(optim_info)  
+        return optim_infos
 
 def train_dagger(expert_actor, trajs, actor=None):
     expert_actor = deepcopy(expert_actor)
@@ -210,8 +213,8 @@ def train_dagger(expert_actor, trajs, actor=None):
                           env=env,
                           runner=runner,
                           trajs=trajs)
-    dataset_sizes, success_rates = engine.train()
-    return dagger_agent, dataset_sizes, success_rates
+    optim_infos_list, dataset_sizes, success_rates = engine.train()
+    return optim_infos_list, dagger_agent, dataset_sizes, success_rates
 
 if __name__ == '__main__':
     set_configs()
