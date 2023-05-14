@@ -154,7 +154,7 @@ class DaggerEngine:
             if iter_t % cfg.alg.eval_interval == 0:
                 success_rate, ret_mean, ret_std, rets, successes = eval_agent(self.agent, 
                                                                               self.env, 
-                                                                              200,
+                                                                              20,
                                                                               disable_tqdm=True)
                 success_rates.append(success_rate)
                 dataset_sizes.append(len(self.dataset))
@@ -222,12 +222,12 @@ if __name__ == '__main__':
     actor = create_actor(env)
     expert_actor = ExpertAgent()
     agent = BasicAgent(actor)
-    num_trajs = 10
+    num_trajs = 500
     expert_trajs = generate_demonstration_data(expert_agent=expert_actor,
                                           env=env,
                                           num_trials=100)
     bc_num_trajs = 100
-    trained_agent, _, size = train_bc_agent(agent, trajs=expert_trajs[:bc_num_trajs], disable_tqdm=True)
+    trained_agent, _, size = train_bc_agent(agent, trajs=expert_trajs[:bc_num_trajs], disable_tqdm=False)
     print('trained')
-    # success_rate_bc, ret_mean_bc, ret_std_bc, rets_bc, successes_bc = eval_agent(trained_agent, env, num_trials=200)
+    success_rate_bc, ret_mean_bc, ret_std_bc, rets_bc, successes_bc = eval_agent(trained_agent, env, num_trials=200)
     # expert_trajs = [np.array([])]

@@ -107,7 +107,7 @@ class TrajDataset(Dataset):
             self.states = np.concatenate((self.states, states), axis=0)
             self.actions = np.concatenate((self.actions, actions), axis=0)
 
-def train_bc_agent(agent, trajs, max_epochs=5000, batch_size=256, lr=0.0005, disable_tqdm=True):
+def train_bc_agent(agent, eval, trajs, max_epochs=50, batch_size=256, lr=0.0005, disable_tqdm=True):
     dataset = TrajDataset(trajs)
     dataloader = DataLoader(dataset, 
                             batch_size=batch_size, 
@@ -115,7 +115,7 @@ def train_bc_agent(agent, trajs, max_epochs=5000, batch_size=256, lr=0.0005, dis
     optimizer = optim.Adam(agent.actor.parameters(),
                            lr=lr)
     pbar = tqdm(range(max_epochs), desc='Epoch', disable=disable_tqdm)
-    logs = dict(loss=[], epoch=[])
+    logs = dict(loss=[], epoch=[], coins=[], returns=[])
     for iter in pbar:
         avg_loss = []
         for batch_idx, sample in enumerate(dataloader):
@@ -130,6 +130,11 @@ def train_bc_agent(agent, trajs, max_epochs=5000, batch_size=256, lr=0.0005, dis
 
             pbar.set_postfix({'loss': loss.item()})
             avg_loss.append(loss.item())
+        returns, coins = eval(agent)
+        
+        logs['coins'].append(coins)
+        logs['returns'].append(returns)
+
         logs['loss'].append(np.mean(avg_loss))
         logs['epoch'].append(iter)
     return agent, logs, len(dataset)
