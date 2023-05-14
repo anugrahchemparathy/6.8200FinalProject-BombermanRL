@@ -12,6 +12,8 @@ from tqdm import tqdm
 from collections import deque
 from models import ActorModel, DQNetwork
 from dataclasses import dataclass
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 
 def get_default_config():
@@ -112,7 +114,7 @@ class DQNAgent:
             ob=torch.tensor(ob),
             next_ob=torch.tensor(next_ob),
             action=torch.tensor(action),
-            reward=torch.tensor(reward),
+            reward=torch.tensor(reward, dtype=torch.float32),
             done=torch.tensor(done)
         ))
     
@@ -159,7 +161,7 @@ class DQNAgent:
 def main():
     config = get_default_config()
     agent = DQNAgent(**config)
-    show_progress = False
+    show_progress = True
     max_steps = 100000 
     env = agent.env
     n_runs = 1
@@ -188,6 +190,7 @@ def main():
             ret += reward
             ob = next_ob
             if done:
+                print('we done')
                 ob = env.reset()
                 smooth_ep_return.append(ret)
                 ep_rewards.append(np.mean(smooth_ep_return))
@@ -221,6 +224,12 @@ def main():
                                 'episode': np.arange(len(ep_rewards)), 
                                 'epsilon': agent.initial_epsilon})
         log.append(run_log)
+    
+    palette = sns.color_palette("hls", 1)
+    run_fig = sns.lineplot(x='episode', y='return', data=log[0], palette=palette)
+    
+    plt.savefig('DQN_test.png')
+    print(log[0])
     return log
 
 if __name__ == '__main__':

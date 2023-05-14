@@ -46,6 +46,8 @@ class ActorModel(nn.Module):
         self.apply(init_params)
 
     def forward(self, obs):
+        if len(obs.shape) == 5:
+            obs = obs.squeeze(1)
         # conv_in = obs.unsqueeze(1)
 
         x = self.image_conv_actor(obs)
