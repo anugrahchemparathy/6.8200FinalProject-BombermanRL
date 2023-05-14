@@ -1,9 +1,11 @@
 from easyrl.models.categorical_policy import CategoricalPolicy
 from easyrl.models.diag_gaussian_policy import DiagGaussianPolicy
+from torch.utils.data import DataLoader
 from easyrl.models.mlp import MLP
 import numpy as np
 import torch
 import torch.nn as nn
+import torch.optim as optim
 from torch.utils.data import Dataset
 from easyrl.runner.nstep_runner import EpisodicRunner
 from easyrl.utils.torch_util import save_model
@@ -104,3 +106,30 @@ class TrajDataset(Dataset):
         else:
             self.states = np.concatenate((self.states, states), axis=0)
             self.actions = np.concatenate((self.actions, actions), axis=0)
+
+def train_bc_agent(agent, trajs, max_epochs=5000, batch_size=256, lr=0.0005, disable_tqdm=True):
+    dataset = TrajDataset(trajs)
+    dataloader = DataLoader(dataset, 
+                            batch_size=batch_size, 
+                            shuffle=True)
+    optimizer = optim.Adam(agent.actor.parameters(),
+                           lr=lr)
+    pbar = tqdm(range(max_epochs), desc='Epoch', disable=disable_tqdm)
+    logs = dict(loss=[], epoch=[])
+    for iter in pbar:
+        avg_loss = []
+        for batch_idx, sample in enumerate(dataloader):
+            states = sample['state'].float().to(cfg.alg.device)
+            expert_actions = sample['action'].float().to(cfg.alg.device)
+            optimizer.zero_grad()
+            act_dist, _ = agent.actor(states)
+            loss = -torch.mean(action_log_prob(expert_actions, act_dist))
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+            pbar.set_postfix({'loss': loss.item()})
+            avg_loss.append(loss.item())
+        logs['loss'].append(np.mean(avg_loss))
+        logs['epoch'].append(iter)
+    return agent, logs, len(dataset)

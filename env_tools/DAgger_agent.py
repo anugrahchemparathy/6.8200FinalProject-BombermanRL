@@ -168,6 +168,7 @@ class DaggerEngine:
 
     def train_once(self, traj):
         self.cur_step += traj.total_steps
+        print('got here', traj.total_steps)
 
         action_infos = traj.action_infos
         #print(action_infos)
@@ -225,7 +226,10 @@ if __name__ == '__main__':
     expert_trajs = generate_demonstration_data(expert_agent=expert_actor,
                                            env=env,
                                            num_trials=50)
+    trained_agent, _, size = train_bc_agent(agent, trajs=expert_trajs[:num_trajs])
+    print('trained')
+    success_rate_bc, ret_mean_bc, ret_std_bc, rets_bc, successes_bc = eval_agent(trained_agent, env, num_trials=200)
     # expert_trajs = [np.array([])]
-    trained_agent, sizes, success_rates = train_dagger(expert_actor, expert_trajs[:num_trajs], actor=agent.actor)
-    #success_rate, ret_mean, ret_std, rets, successes = eval_agent(trained_agent, env, num_trials=200)
+    trained_dagger_agent, dagger_sizes, dagger_success_rates = train_dagger(expert_actor, expert_trajs[:num_trajs], actor=trained_agent.actor)
+    dagr_success_rate, dgr_ret_mean, dgr_ret_std, dgr_rets, dgr_successes = eval_agent(trained_dagger_agent, env, num_trials=200)
     
