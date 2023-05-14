@@ -19,7 +19,7 @@ from settings import game_settings, event_ids, rewards
 from game_objects import *
 from arenas import *
 
-CURIOSITY_BASELINE = 1.5
+NO_REPEAT_BASELINE = 1.5
 
 # ACTIONS
 UP = 0
@@ -65,6 +65,10 @@ env.reset() - resets env, returns initial state
 env.step(action) - returns next_state, reward, done, log
 env._get_obs() - get current state
 """
+
+use_curiosity_subreward = True
+use_no_repeat_subreward = True
+use_bomb_avoidance_subreward = True
 
 
 class BombermanEnv(gym.Env):
@@ -139,32 +143,56 @@ class BombermanEnv(gym.Env):
             self.player.events.append(event_ids.MOVED_LEFT)
             reward += rewards.valid_move
 
-            bomb_avoidance = self.player.get_bomb_avoidance_reward(self.bombs) - scaled_bomb_distances
-            reward +=  bomb_avoidance
-        
+            self.player.update_past_positions()
+            if use_bomb_avoidance_subreward:
+                bomb_avoidance = self.player.get_bomb_avoidance_reward(self.bombs) - scaled_bomb_distances
+                reward +=  bomb_avoidance
+
+            if use_curiosity_subreward:
+                curiosity = self.player.get_curiosity_reward()
+                reward += curiosity
+
         elif action == RIGHT and self.tile_is_free(self.player.x, self.player.y + 1):
             self.player.y += 1
             self.player.events.append(event_ids.MOVED_RIGHT)
             reward += rewards.valid_move
 
-            bomb_avoidance = self.player.get_bomb_avoidance_reward(self.bombs) - scaled_bomb_distances
-            reward +=  bomb_avoidance
-        
+            self.player.update_past_positions()
+            if use_bomb_avoidance_subreward:
+                bomb_avoidance = self.player.get_bomb_avoidance_reward(self.bombs) - scaled_bomb_distances
+                reward +=  bomb_avoidance
+
+            if use_curiosity_subreward:
+                curiosity = self.player.get_curiosity_reward()
+                reward += curiosity
+
         elif action == UP and self.tile_is_free(self.player.x - 1, self.player.y):
             self.player.x -= 1
             self.player.events.append(event_ids.MOVED_UP)
             reward += rewards.valid_move
 
-            bomb_avoidance = self.player.get_bomb_avoidance_reward(self.bombs) - scaled_bomb_distances
-            reward +=  bomb_avoidance
-        
+            self.player.update_past_positions()
+            if use_bomb_avoidance_subreward:
+                bomb_avoidance = self.player.get_bomb_avoidance_reward(self.bombs) - scaled_bomb_distances
+                reward +=  bomb_avoidance
+
+            if use_curiosity_subreward:
+                curiosity = self.player.get_curiosity_reward()
+                reward += curiosity
+
         elif action == DOWN and self.tile_is_free(self.player.x + 1, self.player.y):
             self.player.x += 1
             self.player.events.append(event_ids.MOVED_DOWN)
             reward += rewards.valid_move
 
-            bomb_avoidance = self.player.get_bomb_avoidance_reward(self.bombs) - scaled_bomb_distances
-            reward +=  bomb_avoidance
+            self.player.update_past_positions()
+            if use_bomb_avoidance_subreward:
+                bomb_avoidance = self.player.get_bomb_avoidance_reward(self.bombs) - scaled_bomb_distances
+                reward +=  bomb_avoidance
+
+            if use_curiosity_subreward:
+                curiosity = self.player.get_curiosity_reward()
+                reward += curiosity
         
         elif action == BOMB and self.player.bombs_left > 0:
             self.logger.info(f'player <{self.player.id}> drops bomb at {(self.player.x, self.player.y)}')
@@ -179,9 +207,10 @@ class BombermanEnv(gym.Env):
         else:
             reward += rewards.invalid_action
         
-        curiosity_reward = self.player.get_curiosity_reward()
-        # print('curiosity reward: ', curiosity_reward)
-        reward += curiosity_reward - CURIOSITY_BASELINE
+
+        if use_no_repeat_subreward:
+            no_repeat_reward = self.player.get_no_repeat_reward()
+            reward += no_repeat_reward - NO_REPEAT_BASELINE
 
         # collect coins
         num_coins = 0
@@ -312,11 +341,11 @@ class BombermanEnv(gym.Env):
         if not self.player.alive:
             reward += rewards.agent_died
         
-        # print('did action', enum_2_action[action], 'got reward', reward, 'done', done, 'round', self.round)
-        # if self.all_players_dead():
-        #     print('AGENT DIED')
-        # if done:
-        #     self.render()
+        print('did action', enum_2_action[action], 'got reward', reward, 'done', done, 'round', self.round)
+        if self.all_players_dead():
+            print('AGENT DIED')
+        if done:
+            self.render()
 
         return (self._get_obs(), reward, done, {'coin': c})
 
@@ -378,7 +407,7 @@ class BombermanEnv(gym.Env):
         for row in rendered_map:
             out_string += ''.join([ITEM_2_EMOJI[r] for r in row]) + '\n'
         
-        # print(out_string)
+        print(out_string)
         return out_string
 
 

@@ -1,4 +1,4 @@
-from settings import game_settings
+from settings import game_settings, rewards
 import numpy as np
 
 # manhattan distance between two positions
@@ -8,6 +8,8 @@ def dist(pos1, pos2):
 AVOID_BOMB_WEIGHT = 5
 CURIOSITY_REWARD = 0.75
 # maybe we should add true curiosity reward, like if the agent has never been in a certain state before
+
+
 
 class Agent(object):
     def __init__(self, id, initial_pos):
@@ -20,16 +22,29 @@ class Agent(object):
         self.score = 0
 
         self.past_positions = [initial_pos]
+        self.past_positions_set = set()
+
 
     def get_pos(self):
         return (self.x, self.y)
 
-    def get_curiosity_reward(self, gamma = CURIOSITY_REWARD):
+    def update_past_positions(self):
+        pos = (self.x, self.y)
+        self.past_positions.append(pos)
+        self.past_positions_set.add(pos)
+
+    def get_no_repeat_reward(self, gamma = CURIOSITY_REWARD):
         pos = (self.x, self.y)
         distances = [dist(pos, self.past_positions[~i]) * (gamma ** i) for i in range(len(self.past_positions))]
-        self.past_positions.append(pos)
         return sum(distances)
     
+    def get_curiosity_reward(self):
+        pos = (self.x, self.y)
+        if pos in self.past_positions_set:
+            return rewards.new_position
+        else:
+            return rewards.repeat_position
+
     def get_bomb_avoidance_reward(self, bombs): # this can be tuned to prioritize soon to explode bombs more
         pos = (self.x, self.y)
 
