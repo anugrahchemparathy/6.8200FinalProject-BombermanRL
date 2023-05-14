@@ -342,7 +342,7 @@ class BombermanEnv(gym.Env):
         if not self.player.alive:
             reward += rewards.agent_died
         
-        print('did action', enum_2_action[action], 'got reward', reward, 'done', done, 'round', self.round)
+        # print('did action', enum_2_action[action], 'got reward', reward, 'done', done, 'round', self.round)
         if self.all_players_dead():
             print('AGENT DIED')
         if done:
@@ -408,7 +408,7 @@ class BombermanEnv(gym.Env):
         for row in rendered_map:
             out_string += ''.join([ITEM_2_EMOJI[r] for r in row]) + '\n'
         
-        print(out_string)
+        # print(out_string)
         return out_string
 
 
